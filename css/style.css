@@ -137,6 +137,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .wizard-step label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
 .wizard-step input, .wizard-step textarea, .wizard-step select { width: 100%; }
 #delivery-done-field { margin-top: 4px; }
+#delivery-done-field label { display: block; margin-bottom: 8px; }
 .wizard-actions { display: flex; flex-direction: column; gap: 10px; }
 button.btn-primary-block { width: 100%; background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 15px; }
 button.btn-primary-block:hover { background: var(--brand-dark); }
