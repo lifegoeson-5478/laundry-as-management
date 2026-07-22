@@ -39,6 +39,8 @@ function doPost(e) {
         return jsonResponse(handleUpdateStatus_(payload));
       case 'fieldUpdate':
         return jsonResponse(handleFieldUpdate_(payload));
+      case 'dashboard':
+        return jsonResponse(handleDashboard_(payload));
       default:
         return jsonResponse({ ok: false, error: '알 수 없는 action입니다: ' + action });
     }
