@@ -4,6 +4,7 @@ async function callApi(action, payload) {
     action: action,
     payload: Object.assign({}, payload, { token: session ? session.token : null })
   };
+  const start = performance.now();
   let res;
   try {
     res = await fetch(API_URL, {
@@ -12,10 +13,12 @@ async function callApi(action, payload) {
       body: JSON.stringify(body)
     });
   } catch (err) {
+    console.log('[callApi]', action, Math.round(performance.now() - start) + 'ms', 'FETCH_ERROR');
     return { ok: false, error: '서버와 통신할 수 없습니다. 네트워크를 확인해주세요. (' + err.message + ')' };
   }
 
   const text = await res.text();
+  console.log('[callApi]', action, Math.round(performance.now() - start) + 'ms');
   try {
     return JSON.parse(text);
   } catch (err) {
