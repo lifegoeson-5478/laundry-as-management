@@ -21,6 +21,8 @@ main { padding: 16px; }
 #list-tab-bar { display: flex; gap: 4px; border-bottom: 2px solid #ddd; margin-bottom: 12px; flex-wrap: wrap; }
 .list-tab { padding: 8px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
 .list-tab.active { border-bottom-color: #333; font-weight: bold; }
+select, input, textarea, button { font-size: 14px; padding: 6px 8px; box-sizing: border-box; }
+.card select, .card textarea { display: block; width: 100%; max-width: 320px; margin-top: 8px; }
 @media (max-width: 480px) {
   #tab-nav button { flex: 1 1 40%; }
 }
