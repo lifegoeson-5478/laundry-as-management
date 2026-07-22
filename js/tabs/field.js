@@ -11,8 +11,8 @@ function renderFieldRow(item) {
   return `
     <div class="field-row" data-id="${escapeHtml(item.id)}">
       <div class="field-row-main">
-        <strong>${escapeHtml(item.브랜드)}</strong>
-        <div class="field-row-sub">회원카드 ${escapeHtml(item.회원카드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
+        <strong>${escapeHtml(item.회원카드)}</strong>
+        <div class="field-row-sub">브랜드 ${escapeHtml(item.브랜드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
       </div>
       ${statusBadge(item.상태)}
     </div>
@@ -47,12 +47,6 @@ async function renderFieldTab(container) {
     container.innerHTML = `
       <div id="list-tab-bar">${tabButtons}</div>
       <div class="field-row-list">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
-      <div id="field-modal-overlay" style="display:none;">
-        <div id="field-modal">
-          <button id="field-modal-close">닫기</button>
-          <div id="field-modal-body"></div>
-        </div>
-      </div>
     `;
 
     container.querySelectorAll('#list-tab-bar button').forEach((btn) => {
@@ -65,8 +59,6 @@ async function renderFieldTab(container) {
     container.querySelectorAll('.field-row').forEach((row) => {
       row.addEventListener('click', () => openFieldModal(row.dataset.id));
     });
-
-    document.getElementById('field-modal-close').addEventListener('click', closeFieldModal);
   }
 
   draw();
@@ -74,27 +66,35 @@ async function renderFieldTab(container) {
 
 function openFieldModal(id) {
   const item = fieldItemsById[id];
-  const overlay = document.getElementById('field-modal-overlay');
-  const body = document.getElementById('field-modal-body');
 
   const buttons = FIELD_STATUS_BUTTONS.map((label) =>
     `<button class="field-status-btn" data-label="${escapeHtml(label)}">${escapeHtml(label)}</button>`
   ).join('');
 
-  body.innerHTML = `
-    <div data-id="${escapeHtml(item.id)}" data-selected-status="">
-      <div><strong>브랜드:</strong> ${escapeHtml(item.브랜드)}</div>
-      <div><strong>회원카드:</strong> ${escapeHtml(item.회원카드)}</div>
-      <div><strong>바코드번호:</strong> ${escapeHtml(item.바코드번호)}</div>
-      <div><strong>손상부위:</strong> ${escapeHtml(item.손상부위)}</div>
-      <div><strong>현재상태:</strong> ${statusBadge(item.상태)}</div>
-      <div class="field-buttons">${buttons}</div>
-      <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
-      <button class="field-save-btn">저장</button>
+  const bodyHtml = `
+    <div id="field-detail" data-id="${escapeHtml(item.id)}" data-selected-status="">
+      <div class="detail-grid">
+        ${detailRow('브랜드', escapeHtml(item.브랜드))}
+        ${detailRow('회원카드', escapeHtml(item.회원카드))}
+        ${detailRow('바코드번호', escapeHtml(item.바코드번호))}
+        ${detailRow('손상부위', escapeHtml(item.손상부위))}
+        ${detailRow('현재상태', statusBadge(item.상태))}
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">진행 상태 선택</div>
+        <div class="field-buttons chip-group">${buttons}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">메모</div>
+        <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
+      </div>
+      <button type="button" class="btn-primary-block field-save-btn">저장</button>
     </div>
   `;
 
-  const detail = body.firstElementChild;
+  const modal = openDetailModal('진행 상태 업데이트', bodyHtml);
+  const detail = modal.querySelector('#field-detail');
+
   detail.querySelectorAll('.field-status-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       detail.dataset.selectedStatus = btn.dataset.label;
@@ -118,15 +118,9 @@ function openFieldModal(id) {
     });
     if (result.ok) {
       await showAlert('저장되었습니다.');
-      closeFieldModal();
+      closeAppModal();
     } else {
       await showAlert('저장 실패: ' + result.error);
     }
   });
-
-  overlay.style.display = 'flex';
-}
-
-function closeFieldModal() {
-  document.getElementById('field-modal-overlay').style.display = 'none';
 }

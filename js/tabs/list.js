@@ -110,7 +110,8 @@ async function renderListTab(container) {
     });
 
     container.querySelectorAll('.delete-as-btn').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const row = btn.closest('tr');
         const id = row.dataset.id;
         if (!(await showConfirm('이 접수 건을 삭제할까요?'))) return;
@@ -123,6 +124,41 @@ async function renderListTab(container) {
         }
       });
     });
+
+    container.querySelectorAll('.list-table tbody tr').forEach((row) => {
+      row.addEventListener('click', () => openListDetailModal(row.dataset.id));
+    });
+  }
+
+  function openListDetailModal(id) {
+    const item = listResult.items.find((i) => i.id === id);
+    if (!item) return;
+
+    const bodyHtml = `
+      <div class="detail-grid">
+        ${detailRow('브랜드', escapeHtml(item.브랜드))}
+        ${detailRow('품목', escapeHtml(item.품목))}
+        ${detailRow('품번', escapeHtml(item.품번))}
+        ${detailRow('생산연도', escapeHtml(item.생산연도))}
+        ${detailRow('사이즈', escapeHtml(item.사이즈))}
+        ${detailRow('색상', escapeHtml(item.색상))}
+        ${detailRow('고객분류', escapeHtml(item.고객분류))}
+        ${detailRow('회원카드', escapeHtml(item.회원카드))}
+        ${detailRow('회원연락처', escapeHtml(item.회원연락처))}
+        ${detailRow('바코드번호', escapeHtml(item.바코드번호))}
+        ${detailRow('매장위치', escapeHtml(item.매장위치))}
+        ${detailRow('수거요청일자', escapeHtml(item.수거요청일자))}
+        ${detailRow('브랜드AS동의일', escapeHtml(item.브랜드AS동의일))}
+        ${detailRow('접수자', escapeHtml(item.접수자))}
+        ${detailRow('접수일시', escapeHtml(item.접수일시))}
+        ${detailRow('현재상태', statusBadge(item.상태))}
+      </div>
+      ${detailRow('손상부위', escapeHtml(item.손상부위))}
+      ${detailRow('요청건관련메모', escapeHtml(item.요청건관련메모))}
+      ${item.현장메모 ? detailRow('현장메모', escapeHtml(item.현장메모)) : ''}
+    `;
+
+    openDetailModal(`${item.브랜드} 접수 상세`, bodyHtml);
   }
 
   draw();
