@@ -31,6 +31,7 @@ function renderIntakeTab(container) {
           <label>사이즈<input type="text" name="사이즈"></label>
           <label>색상<input type="text" name="색상"></label>
           <label>바코드번호<input type="text" name="바코드번호"></label>
+          <label>수거요청일자<input type="date" name="수거요청일자"></label>
         </div>
         <label>손상부위<textarea name="손상부위"></textarea></label>
       </div>
@@ -38,8 +39,7 @@ function renderIntakeTab(container) {
       <div class="wizard-step">
         <div class="step-head"><span class="step-num">3</span>접수 처리 정보</div>
         <div class="field-grid">
-          <label>매장위치<input type="text" name="매장위치"></label>
-          <label>수거요청일자<input type="date" name="수거요청일자"></label>
+          <label>매장위치<input type="text" name="매장위치" placeholder="롯데 00층/뉴코아 00층"></label>
           <label>브랜드AS동의일<input type="date" name="브랜드AS동의일"></label>
         </div>
         <label>요청건관련메모<textarea name="요청건관련메모" placeholder="예: 출고전 꼭 확인 받고 출고 해주세요"></textarea></label>
