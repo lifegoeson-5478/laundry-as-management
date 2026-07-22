@@ -35,6 +35,10 @@ function doPost(e) {
         return jsonResponse(handleSubmitAS_(payload));
       case 'listAS':
         return jsonResponse(handleListAS_(payload));
+      case 'updateStatus':
+        return jsonResponse(handleUpdateStatus_(payload));
+      case 'fieldUpdate':
+        return jsonResponse(handleFieldUpdate_(payload));
       default:
         return jsonResponse({ ok: false, error: '알 수 없는 action입니다: ' + action });
     }

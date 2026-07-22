@@ -51,3 +51,30 @@ function handleListAS_(payload) {
   });
   return { ok: true, items: rows };
 }
+
+function handleUpdateStatus_(payload) {
+  requireSession_(payload);
+  if (!payload.id || !payload.status) {
+    return { ok: false, error: 'id와 status가 필요합니다.' };
+  }
+  var updated = updateRowById('AS접수', payload.id, { 상태: payload.status });
+  if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  return { ok: true };
+}
+
+function handleFieldUpdate_(payload) {
+  requireSession_(payload);
+  if (!payload.id || !payload.fieldStatus) {
+    return { ok: false, error: 'id와 fieldStatus가 필요합니다.' };
+  }
+  var mappedStatus = FIELD_STATUS_MAP[payload.fieldStatus];
+  if (!mappedStatus) {
+    return { ok: false, error: '알 수 없는 현장 상태입니다: ' + payload.fieldStatus };
+  }
+  var updated = updateRowById('AS접수', payload.id, {
+    상태: mappedStatus,
+    현장메모: payload.memo || ''
+  });
+  if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  return { ok: true };
+}
