@@ -19,7 +19,6 @@ async function renderListTab(container) {
   }
 
   const statusOptions = statusResult.ok ? statusResult.items : [];
-  const isAdmin = getSession() && getSession().role === '관리자';
   let currentFilter = '전체';
 
   function draw() {
@@ -41,24 +40,27 @@ async function renderListTab(container) {
           <td>${escapeHtml(item.고객분류)}</td>
           <td>${escapeHtml(item.접수일시)}</td>
           <td>${escapeHtml(item.접수자)}</td>
-          <td><select class="status-select">${statusOptionsHtml}</select></td>
-          ${isAdmin ? '<td><button class="delete-as-btn">삭제</button></td>' : ''}
+          <td>
+            <div class="status-cell">
+              ${statusBadge(item.상태)}
+              <select class="status-select">${statusOptionsHtml}</select>
+            </div>
+          </td>
+          <td><button class="delete-as-btn">삭제</button></td>
         </tr>
       `;
     }).join('');
-
-    const colCount = isAdmin ? 7 : 6;
 
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
       <table class="list-table">
         <thead>
           <tr>
-            <th>브랜드</th><th>품목</th><th>고객분류</th><th>접수일</th><th>접수자</th><th>상태</th>${isAdmin ? '<th></th>' : ''}
+            <th>브랜드</th><th>품목</th><th>고객분류</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="${colCount}">표시할 항목이 없습니다.</td></tr>`}
+          ${rows || `<tr><td colspan="7">표시할 항목이 없습니다.</td></tr>`}
         </tbody>
       </table>
     `;
@@ -73,8 +75,17 @@ async function renderListTab(container) {
     container.querySelectorAll('.status-select').forEach((select) => {
       select.addEventListener('change', async (e) => {
         const id = e.target.closest('tr').dataset.id;
-        const result = await callApi('updateStatus', { id: id, status: e.target.value });
-        if (!result.ok) alert('상태 변경 실패: ' + result.error);
+        const newStatus = e.target.value;
+        const result = await callApi('updateStatus', { id: id, status: newStatus });
+        if (!result.ok) {
+          alert('상태 변경 실패: ' + result.error);
+          return;
+        }
+        const item = listResult.items.find((i) => i.id === id);
+        if (item) item.상태 = newStatus;
+        const badge = e.target.closest('.status-cell').querySelector('.badge');
+        badge.className = 'badge ' + statusBadgeClass(newStatus);
+        badge.textContent = newStatus;
       });
     });
 

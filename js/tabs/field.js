@@ -13,7 +13,7 @@ function renderFieldRow(item) {
       <strong>${escapeHtml(item.브랜드)}</strong>
       <div>회원카드: ${escapeHtml(item.회원카드)} · 바코드번호: ${escapeHtml(item.바코드번호)}</div>
       <div>손상부위: ${escapeHtml(item.손상부위)}</div>
-      <div>매장위치: ${escapeHtml(item.매장위치)} · 현재상태: ${escapeHtml(item.상태)}</div>
+      <div>매장위치: ${escapeHtml(item.매장위치)} · ${statusBadge(item.상태)}</div>
     </div>
   `;
 }
@@ -86,7 +86,7 @@ function openFieldModal(id) {
       <div><strong>회원카드:</strong> ${escapeHtml(item.회원카드)}</div>
       <div><strong>바코드번호:</strong> ${escapeHtml(item.바코드번호)}</div>
       <div><strong>손상부위:</strong> ${escapeHtml(item.손상부위)}</div>
-      <div><strong>현재상태:</strong> ${escapeHtml(item.상태)}</div>
+      <div><strong>현재상태:</strong> ${statusBadge(item.상태)}</div>
       <div class="field-buttons">${buttons}</div>
       <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
       <button class="field-save-btn">저장</button>

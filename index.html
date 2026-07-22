@@ -4,23 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>브랜드 AS 관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
 <div id="login-screen">
-  <h1>브랜드 AS 관리</h1>
-  <div id="google-login-button"></div>
+  <div id="login-card">
+    <div id="login-mark">AS</div>
+    <h1>브랜드 AS 관리</h1>
+    <p id="login-sub">매장 방문 AS 접수와 진행 현황을 한 곳에서</p>
+    <div id="google-login-button"></div>
+  </div>
 </div>
 
 <div id="app" style="display:none;">
   <nav id="tab-nav">
-    <button data-tab="dashboard">대시보드</button>
-    <button data-tab="intake">접수</button>
-    <button data-tab="list">목록</button>
-    <button data-tab="field">현장</button>
-    <button data-tab="settings" id="settings-tab-button" style="display:none;">설정</button>
+    <div id="brand-mark"><span id="brand-badge">AS</span>브랜드 AS 관리</div>
+    <div id="tab-nav-links">
+      <button data-tab="dashboard">대시보드</button>
+      <button data-tab="intake">접수</button>
+      <button data-tab="list">목록</button>
+      <button data-tab="field">현장</button>
+      <button data-tab="settings" id="settings-tab-button" style="display:none;">설정</button>
+    </div>
     <button id="logout-button">로그아웃</button>
   </nav>
   <main id="tab-content"></main>

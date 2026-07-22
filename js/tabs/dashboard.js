@@ -6,23 +6,37 @@ async function renderDashboardTab(container) {
     return;
   }
 
-  const agingRows = Object.entries(result.agingBuckets).map(([bucket, count]) =>
-    `<tr><td>${escapeHtml(bucket)}</td><td>${count}</td></tr>`
-  ).join('');
+  const agingCards = Object.entries(result.agingBuckets).map(([bucket, count]) => `
+    <div class="stat-card">
+      <div class="stat-label">${escapeHtml(bucket)}</div>
+      <div class="stat-value">${count}</div>
+    </div>
+  `).join('');
 
   const staffRows = Object.entries(result.byStaff).map(([name, count]) =>
     `<tr><td>${escapeHtml(name)}</td><td>${count}</td></tr>`
-  ).join('');
+  ).join('') || '<tr><td colspan="2">진행중인 건이 없습니다.</td></tr>';
 
   container.innerHTML = `
-    <h2>AS 접수/회수 필요 현황</h2>
-    <table>
-      <tr><td>AS 접수 필요 수량</td><td>${result.needIntake}</td></tr>
-      <tr><td>AS 회수 필요 수량</td><td>${result.needPickup}</td></tr>
-    </table>
+    <h2>AS 접수 · 회수 필요 현황</h2>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">AS 접수 필요</div>
+        <div class="stat-value">${result.needIntake}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">AS 회수 필요</div>
+        <div class="stat-value">${result.needPickup}</div>
+      </div>
+    </div>
+
     <h2>경과기간별 수량</h2>
-    <table>${agingRows}</table>
+    <div class="stat-grid">${agingCards}</div>
+
     <h2>담당자별 진행 현황</h2>
-    <table>${staffRows}</table>
+    <table class="list-table">
+      <thead><tr><th>담당자</th><th>진행중 건수</th></tr></thead>
+      <tbody>${staffRows}</tbody>
+    </table>
   `;
 }

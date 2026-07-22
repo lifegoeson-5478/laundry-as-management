@@ -128,7 +128,7 @@
 | submitAS | AS 접수 건 생성 | 로그인 사용자 |
 | listAS | AS 접수 목록 조회 | 로그인 사용자 |
 | updateStatus | 상태값 변경 | 로그인 사용자 |
-| deleteAS | AS 접수 건 삭제 | 관리자 |
+| deleteAS | AS 접수 건 삭제 | 로그인 사용자 |
 | fieldUpdate | 현장 간단 상태 + 메모 저장 | 로그인 사용자 |
 | dashboard | 집계 데이터 조회 | 로그인 사용자 |
 | listStaff / addStaff / updateStaff / deleteStaff | 직원 화이트리스트 관리 | 관리자 |
