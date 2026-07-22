@@ -19,7 +19,7 @@ function renderFieldRow(item) {
   `;
 }
 
-async function renderFieldTab(container) {
+async function renderFieldTab(container, params) {
   container.innerHTML = '<div>불러오는 중...</div>';
   const result = await callApi('listAS', {});
   if (!result.ok) {
@@ -33,7 +33,7 @@ async function renderFieldTab(container) {
   fieldItemsById = {};
   openItems.forEach((item) => { fieldItemsById[item.id] = item; });
 
-  let currentSection = FIELD_SECTIONS[0][0];
+  let currentSection = (params && params.section) || FIELD_SECTIONS[0][0];
 
   function draw() {
     const tabButtons = FIELD_SECTIONS.map(([title]) =>

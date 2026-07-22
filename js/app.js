@@ -6,12 +6,12 @@ const TAB_RENDERERS = {
   settings: renderSettingsTab
 };
 
-function showTab(tabName) {
+function showTab(tabName, params) {
   document.querySelectorAll('#tab-nav button[data-tab]').forEach((btn) => {
     btn.classList.toggle('current', btn.dataset.tab === tabName);
   });
   document.getElementById('tab-content').innerHTML = '';
-  TAB_RENDERERS[tabName](document.getElementById('tab-content'));
+  TAB_RENDERERS[tabName](document.getElementById('tab-content'), params);
 }
 
 function startApp(session) {

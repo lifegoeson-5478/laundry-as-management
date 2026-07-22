@@ -7,7 +7,15 @@ const LIST_FILTERS = {
   '택배 접수': (r) => String(r.매장위치 || '').indexOf('택배') !== -1
 };
 
-async function renderListTab(container) {
+const LIST_EDIT_FIELDS = [
+  ['고객분류', 'text'], ['회원카드', 'text'], ['회원연락처', 'text'],
+  ['수거요청일자', 'date'], ['바코드번호', 'text'],
+  ['브랜드', 'text'], ['품목', 'text'], ['품번', 'text'], ['생산연도', 'text'],
+  ['사이즈', 'text'], ['색상', 'text'], ['매장위치', 'text'],
+  ['브랜드AS동의일', 'date'], ['손상부위', 'text'], ['요청건관련메모', 'text']
+];
+
+async function renderListTab(container, params) {
   container.innerHTML = '<div>불러오는 중...</div>';
 
   const listResult = await callApi('listAS', {});
@@ -20,14 +28,44 @@ async function renderListTab(container) {
 
   const statusOptions = statusResult.ok ? statusResult.items : [];
   let currentFilter = '전체';
+  let searchText = '';
+
+  let specialFilter = null;
+  let specialLabel = '';
+  if (params && params.agingBucket) {
+    specialLabel = `경과기간: ${params.agingBucket}`;
+    specialFilter = (r) =>
+      r.상태 !== '출고 완료' && r.상태 !== '보상 종결' &&
+      computeAgingBucketClient(r.수거요청일자) === params.agingBucket;
+  } else if (params && params.staff) {
+    specialLabel = `담당자: ${params.staff}`;
+    specialFilter = (r) =>
+      r.상태 !== '출고 완료' && r.상태 !== '보상 종결' && r.접수자 === params.staff;
+  }
 
   function draw() {
     const filterFn = LIST_FILTERS[currentFilter];
-    const items = filterFn ? listResult.items.filter(filterFn) : listResult.items;
+    let items = filterFn ? listResult.items.filter(filterFn) : listResult.items;
+    if (specialFilter) items = items.filter(specialFilter);
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      items = items.filter((r) =>
+        String(r.회원카드 || '').toLowerCase().includes(q) ||
+        String(r.회원연락처 || '').toLowerCase().includes(q) ||
+        String(r.바코드번호 || '').toLowerCase().includes(q)
+      );
+    }
 
     const filterButtons = Object.keys(LIST_FILTERS).map((name) =>
       `<button data-filter="${escapeHtml(name)}" class="list-tab ${name === currentFilter ? 'active' : ''}">${escapeHtml(name)}</button>`
     ).join('');
+
+    const specialBanner = specialFilter ? `
+      <div class="special-filter-banner">
+        ${escapeHtml(specialLabel)}
+        <button type="button" id="clear-special-filter">필터 해제</button>
+      </div>
+    ` : '';
 
     const rows = items.map((item) => {
       const optionsHtml = statusOptions.map((s) =>
@@ -38,7 +76,7 @@ async function renderListTab(container) {
           <td>${escapeHtml(item.브랜드)}</td>
           <td>${escapeHtml(item.품목)}</td>
           <td>${escapeHtml(item.고객분류)}</td>
-          <td>${escapeHtml(item.접수일시)}</td>
+          <td>${escapeHtml(formatDateOnly(item.접수일시))}</td>
           <td>${escapeHtml(item.접수자)}</td>
           <td>
             <div class="status-cell">
@@ -53,6 +91,8 @@ async function renderListTab(container) {
 
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
+      ${specialBanner}
+      <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색" value="${escapeHtml(searchText)}">
       <table class="list-table">
         <thead>
           <tr>
@@ -64,6 +104,23 @@ async function renderListTab(container) {
         </tbody>
       </table>
     `;
+
+    const searchInput = document.getElementById('list-search');
+    searchInput.focus();
+    searchInput.setSelectionRange(searchText.length, searchText.length);
+    searchInput.addEventListener('input', (e) => {
+      searchText = e.target.value;
+      draw();
+    });
+
+    const clearBtn = document.getElementById('clear-special-filter');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        specialFilter = null;
+        specialLabel = '';
+        draw();
+      });
+    }
 
     container.querySelectorAll('#list-tab-bar button').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -130,11 +187,8 @@ async function renderListTab(container) {
     });
   }
 
-  function openListDetailModal(id) {
-    const item = listResult.items.find((i) => i.id === id);
-    if (!item) return;
-
-    const bodyHtml = `
+  function renderDetailBody(item) {
+    return `
       <div class="detail-grid">
         ${detailRow('브랜드', escapeHtml(item.브랜드))}
         ${detailRow('품목', escapeHtml(item.품목))}
@@ -147,18 +201,67 @@ async function renderListTab(container) {
         ${detailRow('회원연락처', escapeHtml(item.회원연락처))}
         ${detailRow('바코드번호', escapeHtml(item.바코드번호))}
         ${detailRow('매장위치', escapeHtml(item.매장위치))}
-        ${detailRow('수거요청일자', escapeHtml(item.수거요청일자))}
-        ${detailRow('브랜드AS동의일', escapeHtml(item.브랜드AS동의일))}
+        ${detailRow('수거요청일자', escapeHtml(formatDateOnly(item.수거요청일자)))}
+        ${detailRow('브랜드AS동의일', escapeHtml(formatDateOnly(item.브랜드AS동의일)))}
         ${detailRow('접수자', escapeHtml(item.접수자))}
-        ${detailRow('접수일시', escapeHtml(item.접수일시))}
+        ${detailRow('접수일시', escapeHtml(formatDateOnly(item.접수일시)))}
         ${detailRow('현재상태', statusBadge(item.상태))}
       </div>
       ${detailRow('손상부위', escapeHtml(item.손상부위))}
       ${detailRow('요청건관련메모', escapeHtml(item.요청건관련메모))}
-      ${item.현장메모 ? detailRow('현장메모', escapeHtml(item.현장메모)) : ''}
+      ${detailRow('현장메모', escapeHtml(item.현장메모 || '(없음)'))}
+      <button type="button" class="btn-outline-block" id="list-edit-btn">수정</button>
     `;
+  }
 
-    openDetailModal(`${item.브랜드} 접수 상세`, bodyHtml);
+  function renderEditBody(item) {
+    const fieldsHtml = LIST_EDIT_FIELDS.map(([name, type]) => `
+      <label>${name}<input type="${type}" name="${name}" value="${escapeHtml(item[name] || '')}"></label>
+    `).join('');
+    return `
+      <form id="list-edit-form">
+        <div class="detail-grid">${fieldsHtml}</div>
+        <div class="wizard-actions" style="margin-top: 16px;">
+          <button type="submit" class="btn-primary-block">저장</button>
+          <button type="button" class="btn-outline-block" id="list-edit-cancel">취소</button>
+        </div>
+      </form>
+    `;
+  }
+
+  function openListDetailModal(id) {
+    const item = listResult.items.find((i) => i.id === id);
+    if (!item) return;
+
+    const modal = openDetailModal(`${item.바코드번호} 접수 상세`, renderDetailBody(item));
+
+    function showView() {
+      modal.querySelector('.modal-body').innerHTML = renderDetailBody(item);
+      modal.querySelector('#list-edit-btn').addEventListener('click', showEdit);
+    }
+
+    function showEdit() {
+      modal.querySelector('.modal-body').innerHTML = renderEditBody(item);
+      modal.querySelector('#list-edit-cancel').addEventListener('click', showView);
+      modal.querySelector('#list-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const form = {};
+        formData.forEach((value, key) => { form[key] = value; });
+
+        const result = await callApi('updateAS', { id: item.id, form: form });
+        if (!result.ok) {
+          await showAlert('수정 실패: ' + result.error);
+          return;
+        }
+        Object.assign(item, form);
+        await showAlert('수정되었습니다.');
+        closeAppModal();
+        draw();
+      });
+    }
+
+    modal.querySelector('#list-edit-btn').addEventListener('click', showEdit);
   }
 
   draw();

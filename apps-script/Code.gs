@@ -39,6 +39,8 @@ function doPost(e) {
         return jsonResponse(handleSubmitAS_(payload));
       case 'listAS':
         return jsonResponse(handleListAS_(payload));
+      case 'updateAS':
+        return jsonResponse(handleUpdateAS_(payload));
       case 'deleteAS':
         return jsonResponse(handleDeleteAS_(payload));
       case 'updateStatus':

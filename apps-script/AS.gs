@@ -52,6 +52,25 @@ function handleListAS_(payload) {
   return { ok: true, items: rows };
 }
 
+var AS_EDITABLE_FIELDS = [
+  '고객분류', '회원카드', '회원연락처', '수거요청일자', '바코드번호',
+  '브랜드', '품목', '품번', '생산연도', '사이즈', '색상',
+  '매장위치', '브랜드AS동의일', '손상부위', '요청건관련메모', '런드리고배송완료처리'
+];
+
+function handleUpdateAS_(payload) {
+  requireSession_(payload);
+  if (!payload.id) return { ok: false, error: 'id가 필요합니다.' };
+  var form = payload.form || {};
+  var updates = {};
+  AS_EDITABLE_FIELDS.forEach(function (field) {
+    if (form[field] !== undefined) updates[field] = form[field];
+  });
+  var updated = updateRowById('AS접수', payload.id, updates);
+  if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  return { ok: true };
+}
+
 function handleDeleteAS_(payload) {
   requireSession_(payload);
   if (!payload.id) return { ok: false, error: 'id가 필요합니다.' };

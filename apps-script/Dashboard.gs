@@ -22,11 +22,21 @@ function handleDashboard_(payload) {
     byStaff[name] = (byStaff[name] || 0) + 1;
   });
 
+  var byCustomerType = {};
+  openRows.forEach(function (r) {
+    var type = r.고객분류 || '(미상)';
+    byCustomerType[type] = (byCustomerType[type] || 0) + 1;
+  });
+
   return {
     ok: true,
     needIntake: needIntake,
     needPickup: needPickup,
     agingBuckets: agingBuckets,
-    byStaff: byStaff
+    byStaff: byStaff,
+    byCustomerType: byCustomerType,
+    totalCount: rows.length,
+    totalOpen: openRows.length,
+    totalClosed: rows.length - openRows.length
   };
 }
