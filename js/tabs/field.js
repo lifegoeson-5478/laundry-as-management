@@ -32,30 +32,43 @@ async function renderFieldTab(container) {
   fieldItemsById = {};
   openItems.forEach((item) => { fieldItemsById[item.id] = item; });
 
-  const sectionsHtml = FIELD_SECTIONS.map(([title, filterFn]) => {
+  let currentSection = FIELD_SECTIONS[0][0];
+
+  function draw() {
+    const tabButtons = FIELD_SECTIONS.map(([title]) =>
+      `<button class="list-tab ${title === currentSection ? 'active' : ''}" data-section="${escapeHtml(title)}">${escapeHtml(title)}</button>`
+    ).join('');
+
+    const [, filterFn] = FIELD_SECTIONS.find(([title]) => title === currentSection);
     const items = openItems.filter(filterFn);
     const rows = items.map(renderFieldRow).join('');
-    return `
-      <h2>${escapeHtml(title)} (${items.length})</h2>
+
+    container.innerHTML = `
+      <div id="list-tab-bar">${tabButtons}</div>
       <div class="field-row-list">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
-    `;
-  }).join('');
-
-  container.innerHTML = `
-    ${sectionsHtml}
-    <div id="field-modal-overlay" style="display:none;">
-      <div id="field-modal">
-        <button id="field-modal-close">닫기</button>
-        <div id="field-modal-body"></div>
+      <div id="field-modal-overlay" style="display:none;">
+        <div id="field-modal">
+          <button id="field-modal-close">닫기</button>
+          <div id="field-modal-body"></div>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  container.querySelectorAll('.field-row').forEach((row) => {
-    row.addEventListener('click', () => openFieldModal(row.dataset.id));
-  });
+    container.querySelectorAll('#list-tab-bar button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentSection = btn.dataset.section;
+        draw();
+      });
+    });
 
-  document.getElementById('field-modal-close').addEventListener('click', closeFieldModal);
+    container.querySelectorAll('.field-row').forEach((row) => {
+      row.addEventListener('click', () => openFieldModal(row.dataset.id));
+    });
+
+    document.getElementById('field-modal-close').addEventListener('click', closeFieldModal);
+  }
+
+  draw();
 }
 
 function openFieldModal(id) {
