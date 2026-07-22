@@ -15,6 +15,23 @@ const LIST_EDIT_FIELDS = [
   ['브랜드AS동의일', 'date'], ['손상부위', 'text'], ['요청건관련메모', 'text']
 ];
 
+function ensureStatusPortal_() {
+  let portal = document.getElementById('status-dropdown-portal');
+  if (!portal) {
+    portal = document.createElement('div');
+    portal.id = 'status-dropdown-portal';
+    portal.className = 'status-dropdown';
+    portal.hidden = true;
+    document.body.appendChild(portal);
+  }
+  return portal;
+}
+
+function closeStatusPortal_() {
+  const portal = document.getElementById('status-dropdown-portal');
+  if (portal) portal.hidden = true;
+}
+
 async function renderListTab(container, params) {
   container.innerHTML = '<div>불러오는 중...</div>';
 
@@ -67,27 +84,20 @@ async function renderListTab(container, params) {
       </div>
     ` : '';
 
-    const rows = items.map((item) => {
-      const optionsHtml = statusOptions.map((s) =>
-        `<div class="status-option ${s === item.상태 ? 'current' : ''}" data-value="${escapeHtml(s)}">${escapeHtml(s)}</div>`
-      ).join('');
-      return `
-        <tr data-id="${escapeHtml(item.id)}">
-          <td>${escapeHtml(item.브랜드)}</td>
-          <td>${escapeHtml(item.품목)}</td>
-          <td>${escapeHtml(item.고객분류)}</td>
-          <td>${escapeHtml(formatDateOnly(item.접수일시))}</td>
-          <td>${escapeHtml(item.접수자)}</td>
-          <td>
-            <div class="status-cell">
-              <button type="button" class="status-chip-trigger ${statusBadgeClass(item.상태)}">${escapeHtml(item.상태)}</button>
-              <div class="status-dropdown" hidden>${optionsHtml}</div>
-            </div>
-          </td>
-          <td><button class="delete-as-btn">삭제</button></td>
-        </tr>
-      `;
-    }).join('');
+    const rows = items.map((item) => `
+      <tr data-id="${escapeHtml(item.id)}">
+        <td>${escapeHtml(item.품목)}</td>
+        <td>${escapeHtml(item.고객분류)}</td>
+        <td>${escapeHtml(item.회원카드)}</td>
+        <td>${escapeHtml(item.바코드번호)}</td>
+        <td>${escapeHtml(formatDateOnly(item.접수일시))}</td>
+        <td>${escapeHtml(item.접수자)}</td>
+        <td>
+          <button type="button" class="status-chip-trigger ${statusBadgeClass(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
+        </td>
+        <td><button class="delete-as-btn">삭제</button></td>
+      </tr>
+    `).join('');
 
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
@@ -96,11 +106,11 @@ async function renderListTab(container, params) {
       <table class="list-table">
         <thead>
           <tr>
-            <th>브랜드</th><th>품목</th><th>고객분류</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
+            <th>품목</th><th>고객분류</th><th>회원카드</th><th>바코드번호</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="7">표시할 항목이 없습니다.</td></tr>`}
+          ${rows || `<tr><td colspan="8">표시할 항목이 없습니다.</td></tr>`}
         </tbody>
       </table>
     `;
@@ -129,40 +139,10 @@ async function renderListTab(container, params) {
       });
     });
 
-    function closeAllStatusDropdowns() {
-      container.querySelectorAll('.status-dropdown').forEach((d) => { d.hidden = true; });
-    }
-
     container.querySelectorAll('.status-chip-trigger').forEach((trigger) => {
       trigger.addEventListener('click', (e) => {
         e.stopPropagation();
-        const dropdown = trigger.nextElementSibling;
-        const wasHidden = dropdown.hidden;
-        closeAllStatusDropdowns();
-        dropdown.hidden = !wasHidden;
-      });
-    });
-
-    container.querySelectorAll('.status-option').forEach((option) => {
-      option.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const cell = option.closest('.status-cell');
-        const id = option.closest('tr').dataset.id;
-        const newStatus = option.dataset.value;
-        const result = await callApi('updateStatus', { id: id, status: newStatus });
-        cell.querySelector('.status-dropdown').hidden = true;
-        if (!result.ok) {
-          await showAlert('상태 변경 실패: ' + result.error);
-          return;
-        }
-        const item = listResult.items.find((i) => i.id === id);
-        if (item) item.상태 = newStatus;
-        const trigger = cell.querySelector('.status-chip-trigger');
-        trigger.className = 'status-chip-trigger ' + statusBadgeClass(newStatus);
-        trigger.textContent = newStatus;
-        cell.querySelectorAll('.status-option').forEach((o) => {
-          o.classList.toggle('current', o.dataset.value === newStatus);
-        });
+        openStatusPortal(trigger);
       });
     });
 
@@ -184,6 +164,48 @@ async function renderListTab(container, params) {
 
     container.querySelectorAll('.list-table tbody tr').forEach((row) => {
       row.addEventListener('click', () => openListDetailModal(row.dataset.id));
+    });
+  }
+
+  function openStatusPortal(trigger) {
+    const id = trigger.dataset.id;
+    const item = listResult.items.find((i) => i.id === id);
+    if (!item) return;
+
+    const portal = ensureStatusPortal_();
+    const alreadyOpenForThis = !portal.hidden && portal.dataset.forId === id;
+    if (alreadyOpenForThis) {
+      portal.hidden = true;
+      return;
+    }
+
+    portal.dataset.forId = id;
+    portal.innerHTML = statusOptions.map((s) =>
+      `<div class="status-option ${s === item.상태 ? 'current' : ''}" data-value="${escapeHtml(s)}">${escapeHtml(s)}</div>`
+    ).join('');
+
+    const rect = trigger.getBoundingClientRect();
+    portal.style.top = `${rect.bottom + 6}px`;
+    portal.style.left = `${rect.left}px`;
+    portal.hidden = false;
+
+    portal.querySelectorAll('.status-option').forEach((option) => {
+      option.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const newStatus = option.dataset.value;
+        const result = await callApi('updateStatus', { id: id, status: newStatus });
+        portal.hidden = true;
+        if (!result.ok) {
+          await showAlert('상태 변경 실패: ' + result.error);
+          return;
+        }
+        item.상태 = newStatus;
+        const rowTrigger = container.querySelector(`.status-chip-trigger[data-id="${id}"]`);
+        if (rowTrigger) {
+          rowTrigger.className = 'status-chip-trigger ' + statusBadgeClass(newStatus);
+          rowTrigger.textContent = newStatus;
+        }
+      });
     });
   }
 
@@ -266,7 +288,10 @@ async function renderListTab(container, params) {
 
   draw();
 
-  document.addEventListener('click', () => {
-    container.querySelectorAll('.status-dropdown').forEach((d) => { d.hidden = true; });
+  document.addEventListener('click', (e) => {
+    const portal = document.getElementById('status-dropdown-portal');
+    if (portal && !portal.hidden && !portal.contains(e.target) && !e.target.classList.contains('status-chip-trigger')) {
+      portal.hidden = true;
+    }
   });
 }

@@ -136,11 +136,10 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .list-table tbody tr:hover { background: #fafcfb; }
 .delete-as-btn { background: #fff; border: 1px solid var(--danger); color: var(--danger); }
 .delete-as-btn:hover { background: var(--danger); color: #fff; }
-.status-cell { position: relative; display: inline-block; }
 .status-chip-trigger { border: none; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .status-chip-trigger:hover { filter: brightness(0.95); }
 .status-dropdown {
-  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 150px;
+  position: fixed; z-index: 2000; min-width: 150px;
   background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow);
   padding: 4px; max-height: 220px; overflow-y: auto;
 }
