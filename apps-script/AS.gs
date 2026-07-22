@@ -52,6 +52,14 @@ function handleListAS_(payload) {
   return { ok: true, items: rows };
 }
 
+function handleDeleteAS_(payload) {
+  requireAdmin_(payload);
+  if (!payload.id) return { ok: false, error: 'id가 필요합니다.' };
+  var deleted = deleteRowById('AS접수', payload.id);
+  if (!deleted) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  return { ok: true };
+}
+
 function handleUpdateStatus_(payload) {
   requireSession_(payload);
   if (!payload.id || !payload.status) {

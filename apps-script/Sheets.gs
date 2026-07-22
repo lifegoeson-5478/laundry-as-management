@@ -42,3 +42,17 @@ function updateRowById(sheetName, id, updates) {
   }
   return false;
 }
+
+function deleteRowById(sheetName, id) {
+  var sheet = getSheet_(sheetName);
+  var values = sheet.getDataRange().getValues();
+  var headers = values[0];
+  var idCol = headers.indexOf('id');
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][idCol]) === String(id)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}

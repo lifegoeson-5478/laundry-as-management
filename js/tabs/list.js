@@ -19,6 +19,7 @@ async function renderListTab(container) {
   }
 
   const statusOptions = statusResult.ok ? statusResult.items : [];
+  const isAdmin = getSession() && getSession().role === '관리자';
   let currentFilter = '전체';
 
   function draw() {
@@ -34,17 +35,32 @@ async function renderListTab(container) {
         `<option value="${escapeHtml(s)}" ${s === item.상태 ? 'selected' : ''}>${escapeHtml(s)}</option>`
       ).join('');
       return `
-        <div class="card" data-id="${escapeHtml(item.id)}">
-          <strong>${escapeHtml(item.브랜드)}</strong> / ${escapeHtml(item.품목)} / ${escapeHtml(item.고객분류)}
-          <div>접수일: ${escapeHtml(item.접수일시)} · 접수자: ${escapeHtml(item.접수자)}</div>
-          <select class="status-select">${statusOptionsHtml}</select>
-        </div>
+        <tr data-id="${escapeHtml(item.id)}">
+          <td>${escapeHtml(item.브랜드)}</td>
+          <td>${escapeHtml(item.품목)}</td>
+          <td>${escapeHtml(item.고객분류)}</td>
+          <td>${escapeHtml(item.접수일시)}</td>
+          <td>${escapeHtml(item.접수자)}</td>
+          <td><select class="status-select">${statusOptionsHtml}</select></td>
+          ${isAdmin ? '<td><button class="delete-as-btn">삭제</button></td>' : ''}
+        </tr>
       `;
     }).join('');
 
+    const colCount = isAdmin ? 7 : 6;
+
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
-      <div id="list-items">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>브랜드</th><th>품목</th><th>고객분류</th><th>접수일</th><th>접수자</th><th>상태</th>${isAdmin ? '<th></th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="${colCount}">표시할 항목이 없습니다.</td></tr>`}
+        </tbody>
+      </table>
     `;
 
     container.querySelectorAll('#list-tab-bar button').forEach((btn) => {
@@ -56,9 +72,24 @@ async function renderListTab(container) {
 
     container.querySelectorAll('.status-select').forEach((select) => {
       select.addEventListener('change', async (e) => {
-        const id = e.target.closest('.card').dataset.id;
+        const id = e.target.closest('tr').dataset.id;
         const result = await callApi('updateStatus', { id: id, status: e.target.value });
         if (!result.ok) alert('상태 변경 실패: ' + result.error);
+      });
+    });
+
+    container.querySelectorAll('.delete-as-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('tr');
+        const id = row.dataset.id;
+        if (!confirm('이 접수 건을 삭제할까요?')) return;
+        const result = await callApi('deleteAS', { id: id });
+        if (result.ok) {
+          listResult.items = listResult.items.filter((item) => item.id !== id);
+          draw();
+        } else {
+          alert('삭제 실패: ' + result.error);
+        }
       });
     });
   }

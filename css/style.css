@@ -1,12 +1,15 @@
-body { font-family: -apple-system, sans-serif; margin: 0; }
+body { font-family: -apple-system, sans-serif; margin: 0; background: #f7f8fa; }
 #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; }
-#tab-nav { display: flex; gap: 8px; padding: 12px; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
-#tab-nav button { padding: 8px 14px; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; }
-main { padding: 16px; }
-.card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+#tab-nav { display: flex; gap: 8px; padding: 12px 20px; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; background: #fff; align-items: center; }
+#tab-nav button { padding: 8px 14px; border: none; background: none; border-radius: 6px; cursor: pointer; color: #555; }
+#tab-nav button:hover { background: #f2f3f5; }
+#tab-nav button[data-tab].current { background: #eef2ff; color: #3730a3; font-weight: 600; }
+#logout-button { margin-left: auto; background: #1f2937 !important; color: #fff !important; }
+main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+.card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 8px; background: #fff; }
 .field-status-btn.selected { background: #333; color: #fff; border-color: #333; }
 .field-save-btn { display: block; margin-top: 8px; }
-.field-row { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+.field-row { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; background: #fff; }
 .field-row:hover { background: #f5f5f5; }
 #field-modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -23,6 +26,16 @@ main { padding: 16px; }
 .list-tab.active { border-bottom-color: #333; font-weight: bold; }
 select, input, textarea, button { font-size: 14px; padding: 6px 8px; box-sizing: border-box; }
 .card select, .card textarea { display: block; width: 100%; max-width: 320px; margin-top: 8px; }
+.list-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.list-table th, .list-table td { border-bottom: 1px solid #eee; padding: 10px 12px; text-align: left; font-size: 13px; }
+.list-table thead th { background: #f8f9fa; font-weight: 600; color: #444; }
+.list-table tbody tr:hover { background: #fafbff; }
+.delete-as-btn { background: #fff; border: 1px solid #e5484d; color: #e5484d; border-radius: 6px; }
+.delete-as-btn:hover { background: #e5484d; color: #fff; }
 @media (max-width: 480px) {
   #tab-nav button { flex: 1 1 40%; }
+  .list-table, .list-table thead, .list-table tbody, .list-table th, .list-table td, .list-table tr { display: block; }
+  .list-table thead { display: none; }
+  .list-table tr { margin-bottom: 8px; border: 1px solid #eee; border-radius: 8px; }
+  .list-table td { border-bottom: none; }
 }

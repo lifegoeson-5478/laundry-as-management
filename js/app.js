@@ -7,6 +7,9 @@ const TAB_RENDERERS = {
 };
 
 function showTab(tabName) {
+  document.querySelectorAll('#tab-nav button[data-tab]').forEach((btn) => {
+    btn.classList.toggle('current', btn.dataset.tab === tabName);
+  });
   document.getElementById('tab-content').innerHTML = '';
   TAB_RENDERERS[tabName](document.getElementById('tab-content'));
 }
