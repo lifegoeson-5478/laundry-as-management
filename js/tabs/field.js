@@ -17,11 +17,12 @@ async function renderFieldTab(container) {
       `<button class="field-status-btn" data-label="${escapeHtml(label)}">${escapeHtml(label)}</button>`
     ).join('');
     return `
-      <div class="card" data-id="${escapeHtml(item.id)}">
+      <div class="card" data-id="${escapeHtml(item.id)}" data-selected-status="">
         <strong>${escapeHtml(item.브랜드)}</strong> / ${escapeHtml(item.품목)}
         <div>매장위치: ${escapeHtml(item.매장위치)} · 현재상태: ${escapeHtml(item.상태)}</div>
         <div class="field-buttons">${buttons}</div>
         <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
+        <button class="field-save-btn">저장</button>
       </div>
     `;
   }).join('');
@@ -29,13 +30,28 @@ async function renderFieldTab(container) {
   container.innerHTML = cards || '<div>표시할 항목이 없습니다.</div>';
 
   container.querySelectorAll('.field-status-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
       const card = btn.closest('.card');
+      card.dataset.selectedStatus = btn.dataset.label;
+      card.querySelectorAll('.field-status-btn').forEach((b) => {
+        b.classList.toggle('selected', b === btn);
+      });
+    });
+  });
+
+  container.querySelectorAll('.field-save-btn').forEach((saveBtn) => {
+    saveBtn.addEventListener('click', async () => {
+      const card = saveBtn.closest('.card');
       const id = card.dataset.id;
+      const fieldStatus = card.dataset.selectedStatus;
+      if (!fieldStatus) {
+        alert('저장할 상태를 먼저 선택해주세요.');
+        return;
+      }
       const memo = card.querySelector('.field-memo').value;
       const result = await callApi('fieldUpdate', {
         id: id,
-        fieldStatus: btn.dataset.label,
+        fieldStatus: fieldStatus,
         memo: memo
       });
       if (result.ok) {

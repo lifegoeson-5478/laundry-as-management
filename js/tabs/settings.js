@@ -25,6 +25,7 @@ async function renderSettingsTab(container) {
       <div class="card" data-email="${escapeHtml(staff.이메일)}">
         ${escapeHtml(staff.이름)} (${escapeHtml(staff.이메일)}) - ${escapeHtml(staff.역할)}
         <label><input type="checkbox" class="staff-active" ${String(staff.활성여부) === 'true' ? 'checked' : ''}> 활성</label>
+        <button class="delete-staff-btn">삭제</button>
       </div>
     `).join('');
 
@@ -32,6 +33,16 @@ async function renderSettingsTab(container) {
       checkbox.addEventListener('change', async (e) => {
         const email = e.target.closest('.card').dataset.email;
         await callApi('updateStaff', { email: email, updates: { 활성여부: e.target.checked } });
+      });
+    });
+
+    list.querySelectorAll('.delete-staff-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const email = btn.closest('.card').dataset.email;
+        if (!confirm(email + ' 직원을 삭제할까요?')) return;
+        const result = await callApi('deleteStaff', { email: email });
+        if (result.ok) loadStaff();
+        else alert('삭제 실패: ' + result.error);
       });
     });
   }

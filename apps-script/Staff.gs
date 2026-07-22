@@ -40,3 +40,23 @@ function handleUpdateStaff_(payload) {
   }
   return { ok: false, error: '해당 이메일을 찾을 수 없습니다.' };
 }
+
+function handleDeleteStaff_(payload) {
+  var session = requireAdmin_(payload);
+  if (!payload.email) return { ok: false, error: 'email이 필요합니다.' };
+  if (payload.email === session.email) {
+    return { ok: false, error: '본인 계정은 삭제할 수 없습니다.' };
+  }
+
+  var sheet = getSheet_('직원목록');
+  var values = sheet.getDataRange().getValues();
+  var headers = values[0];
+  var emailCol = headers.indexOf('이메일');
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][emailCol] === payload.email) {
+      sheet.deleteRow(i + 1);
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: '해당 이메일을 찾을 수 없습니다.' };
+}

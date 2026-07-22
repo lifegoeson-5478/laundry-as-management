@@ -47,6 +47,8 @@ function doPost(e) {
         return jsonResponse(handleAddStaff_(payload));
       case 'updateStaff':
         return jsonResponse(handleUpdateStaff_(payload));
+      case 'deleteStaff':
+        return jsonResponse(handleDeleteStaff_(payload));
       case 'listStatus':
         return jsonResponse(handleListStatus_(payload));
       case 'addStatus':
