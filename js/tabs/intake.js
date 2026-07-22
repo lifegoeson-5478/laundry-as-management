@@ -1,59 +1,96 @@
-const INTAKE_FIELDS = [
-  ['고객분류', 'select', ['런드리고', '런드리24']],
-  ['회원카드', 'text'],
-  ['회원연락처', 'text'],
-  ['수거요청일자', 'date'],
-  ['바코드번호', 'text'],
-  ['브랜드', 'text'],
-  ['품목', 'text'],
-  ['품번', 'text'],
-  ['생산연도', 'text'],
-  ['사이즈', 'text'],
-  ['색상', 'text'],
-  ['매장위치', 'text'],
-  ['브랜드AS동의일', 'date'],
-  ['손상부위', 'text'],
-  ['요청건관련메모', 'textarea']
-];
-
 function renderIntakeTab(container) {
-  const fieldsHtml = INTAKE_FIELDS.map(([name, type, options]) => {
-    if (type === 'select') {
-      const optionsHtml = options.map((o) => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
-      return `<label>${name}<select name="${name}">${optionsHtml}</select></label>`;
-    }
-    if (type === 'textarea') {
-      return `<label>${name}<textarea name="${name}"></textarea></label>`;
-    }
-    return `<label>${name}<input type="${type}" name="${name}"></label>`;
-  }).join('');
-
   container.innerHTML = `
     <form id="intake-form">
-      ${fieldsHtml}
-      <div id="delivery-done-field" style="display:none;">
-        <label>런드리고) 배송 완료 처리
-          <select name="런드리고배송완료처리">
-            <option value="">선택하세요</option>
-            <option value="네 완료 했습니다.">네 완료 했습니다.</option>
-            <option value="런드리24">런드리24</option>
-          </select>
-        </label>
+      <div class="wizard-step">
+        <div class="step-head"><span class="step-num">1</span>고객 정보</div>
+        <div class="chip-group" data-field="고객분류">
+          <button type="button" class="chip active" data-value="런드리고">런드리고</button>
+          <button type="button" class="chip" data-value="런드리24">런드리24</button>
+        </div>
+        <input type="hidden" name="고객분류" value="런드리고">
+        <div class="field-grid">
+          <label>회원카드<input type="text" name="회원카드"></label>
+          <label>회원연락처<input type="text" name="회원연락처"></label>
+        </div>
+        <div id="delivery-done-field">
+          <label>런드리고) 배송 완료 처리</label>
+          <div class="chip-group" data-field="런드리고배송완료처리">
+            <button type="button" class="chip" data-value="네 완료 했습니다.">네 완료 했습니다.</button>
+            <button type="button" class="chip" data-value="런드리24">런드리24</button>
+          </div>
+          <input type="hidden" name="런드리고배송완료처리" value="">
+        </div>
       </div>
-      <button type="submit">제출</button>
+
+      <div class="wizard-step">
+        <div class="step-head"><span class="step-num">2</span>세탁물 정보</div>
+        <div class="field-grid">
+          <label>브랜드<input type="text" name="브랜드"></label>
+          <label>품목<input type="text" name="품목"></label>
+          <label>품번<input type="text" name="품번"></label>
+          <label>생산연도<input type="text" name="생산연도"></label>
+          <label>사이즈<input type="text" name="사이즈"></label>
+          <label>색상<input type="text" name="색상"></label>
+          <label>바코드번호<input type="text" name="바코드번호"></label>
+        </div>
+        <label>손상부위<textarea name="손상부위"></textarea></label>
+      </div>
+
+      <div class="wizard-step">
+        <div class="step-head"><span class="step-num">3</span>접수 처리 정보</div>
+        <div class="field-grid">
+          <label>매장위치<input type="text" name="매장위치"></label>
+          <label>수거요청일자<input type="date" name="수거요청일자"></label>
+          <label>브랜드AS동의일<input type="date" name="브랜드AS동의일"></label>
+        </div>
+        <label>요청건관련메모<textarea name="요청건관련메모" placeholder="예: 출고전 꼭 확인 받고 출고 해주세요"></textarea></label>
+      </div>
+
+      <div class="wizard-actions">
+        <button type="submit" class="btn-primary-block">접수하기</button>
+        <button type="reset" class="btn-outline-block">초기화</button>
+      </div>
     </form>
   `;
 
   const form = document.getElementById('intake-form');
-  const customerTypeSelect = form.querySelector('[name="고객분류"]');
+
+  form.querySelectorAll('.chip-group').forEach((group) => {
+    const fieldName = group.dataset.field;
+    const hiddenInput = form.querySelector(`input[type="hidden"][name="${fieldName}"]`);
+    group.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        hiddenInput.value = chip.dataset.value;
+        if (fieldName === '고객분류') syncDeliveryDoneField();
+      });
+    });
+  });
 
   function syncDeliveryDoneField() {
+    const customerType = form.querySelector('input[name="고객분류"]').value;
     document.getElementById('delivery-done-field').style.display =
-      customerTypeSelect.value === '런드리고' ? 'block' : 'none';
+      customerType === '런드리고' ? 'block' : 'none';
   }
-
-  customerTypeSelect.addEventListener('change', syncDeliveryDoneField);
   syncDeliveryDoneField();
+
+  form.addEventListener('reset', () => {
+    setTimeout(() => {
+      form.querySelectorAll('.chip-group').forEach((group) => {
+        const fieldName = group.dataset.field;
+        const hiddenInput = form.querySelector(`input[type="hidden"][name="${fieldName}"]`);
+        group.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+        if (fieldName === '고객분류') {
+          group.querySelector('.chip').classList.add('active');
+          hiddenInput.value = '런드리고';
+        } else {
+          hiddenInput.value = '';
+        }
+      });
+      syncDeliveryDoneField();
+    }, 0);
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -65,7 +102,6 @@ function renderIntakeTab(container) {
     if (result.ok) {
       alert('접수되었습니다.');
       form.reset();
-      document.getElementById('delivery-done-field').style.display = 'none';
     } else {
       alert('접수 실패: ' + result.error);
     }
