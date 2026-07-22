@@ -101,6 +101,20 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 }
 #field-modal-close { float: right; background: none; border: none; color: var(--text-muted); }
 
+/* Shared app modal (replaces native alert/confirm) */
+.app-modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(16, 33, 28, 0.45); align-items: center; justify-content: center; z-index: 1000;
+}
+.app-modal-overlay.open { display: flex; }
+.app-modal {
+  background: #fff; border-radius: 14px; padding: 24px;
+  width: min(90vw, 360px); box-shadow: var(--shadow);
+}
+.app-modal #app-modal-message { margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: var(--text); white-space: pre-line; }
+.app-modal-actions { display: flex; gap: 8px; }
+.app-modal-actions button { flex: 1; margin: 0; }
+
 /* Tab bar (list/field sub-tabs) */
 #list-tab-bar { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
 .list-tab { padding: 8px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--text-muted); }

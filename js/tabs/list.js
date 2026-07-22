@@ -78,7 +78,7 @@ async function renderListTab(container) {
         const newStatus = e.target.value;
         const result = await callApi('updateStatus', { id: id, status: newStatus });
         if (!result.ok) {
-          alert('상태 변경 실패: ' + result.error);
+          await showAlert('상태 변경 실패: ' + result.error);
           return;
         }
         const item = listResult.items.find((i) => i.id === id);
@@ -93,13 +93,13 @@ async function renderListTab(container) {
       btn.addEventListener('click', async () => {
         const row = btn.closest('tr');
         const id = row.dataset.id;
-        if (!confirm('이 접수 건을 삭제할까요?')) return;
+        if (!(await showConfirm('이 접수 건을 삭제할까요?'))) return;
         const result = await callApi('deleteAS', { id: id });
         if (result.ok) {
           listResult.items = listResult.items.filter((item) => item.id !== id);
           draw();
         } else {
-          alert('삭제 실패: ' + result.error);
+          await showAlert('삭제 실패: ' + result.error);
         }
       });
     });

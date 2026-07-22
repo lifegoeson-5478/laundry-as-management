@@ -106,7 +106,7 @@ function openFieldModal(id) {
   detail.querySelector('.field-save-btn').addEventListener('click', async () => {
     const fieldStatus = detail.dataset.selectedStatus;
     if (!fieldStatus) {
-      alert('저장할 상태를 먼저 선택해주세요.');
+      await showAlert('저장할 상태를 먼저 선택해주세요.');
       return;
     }
     const memo = detail.querySelector('.field-memo').value;
@@ -116,10 +116,10 @@ function openFieldModal(id) {
       memo: memo
     });
     if (result.ok) {
-      alert('저장되었습니다.');
+      await showAlert('저장되었습니다.');
       closeFieldModal();
     } else {
-      alert('저장 실패: ' + result.error);
+      await showAlert('저장 실패: ' + result.error);
     }
   });
 

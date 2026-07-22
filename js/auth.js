@@ -33,7 +33,7 @@ function initGoogleLogin(onSuccess) {
         setSession(result.session);
         onSuccess(result.session);
       } else {
-        alert(result.error || '로그인에 실패했습니다.');
+        await showAlert(result.error || '로그인에 실패했습니다.');
       }
     }
   });

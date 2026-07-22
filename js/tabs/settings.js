@@ -39,10 +39,10 @@ async function renderSettingsTab(container) {
     list.querySelectorAll('.delete-staff-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const email = btn.closest('.card').dataset.email;
-        if (!confirm(email + ' 직원을 삭제할까요?')) return;
+        if (!(await showConfirm(email + ' 직원을 삭제할까요?'))) return;
         const result = await callApi('deleteStaff', { email: email });
         if (result.ok) loadStaff();
-        else alert('삭제 실패: ' + result.error);
+        else await showAlert('삭제 실패: ' + result.error);
       });
     });
   }
@@ -62,7 +62,7 @@ async function renderSettingsTab(container) {
         const name = btn.closest('.card').dataset.name;
         const result = await callApi('deleteStatus', { name: name });
         if (result.ok) loadStatus();
-        else alert('삭제 실패: ' + result.error);
+        else await showAlert('삭제 실패: ' + result.error);
       });
     });
   }
@@ -73,7 +73,7 @@ async function renderSettingsTab(container) {
     const form = Object.fromEntries(formData.entries());
     const result = await callApi('addStaff', { form: form });
     if (result.ok) { e.target.reset(); loadStaff(); }
-    else alert('추가 실패: ' + result.error);
+    else await showAlert('추가 실패: ' + result.error);
   });
 
   document.getElementById('add-status-form').addEventListener('submit', async (e) => {
@@ -81,7 +81,7 @@ async function renderSettingsTab(container) {
     const name = new FormData(e.target).get('name');
     const result = await callApi('addStatus', { name: name });
     if (result.ok) { e.target.reset(); loadStatus(); }
-    else alert('추가 실패: ' + result.error);
+    else await showAlert('추가 실패: ' + result.error);
   });
 
   loadStaff();

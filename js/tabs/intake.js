@@ -99,10 +99,10 @@ function renderIntakeTab(container) {
 
     const result = await callApi('submitAS', { form: record });
     if (result.ok) {
-      alert('접수되었습니다.');
+      await showAlert('접수되었습니다.');
       form.reset();
     } else {
-      alert('접수 실패: ' + result.error);
+      await showAlert('접수 실패: ' + result.error);
     }
   });
 }
