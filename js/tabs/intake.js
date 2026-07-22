@@ -13,10 +13,9 @@ function renderIntakeTab(container) {
           <label>회원연락처<input type="text" name="회원연락처"></label>
         </div>
         <div id="delivery-done-field">
-          <label>런드리고) 배송 완료 처리</label>
+          <label>배송 완료 처리</label>
           <div class="chip-group" data-field="런드리고배송완료처리">
             <button type="button" class="chip" data-value="네 완료 했습니다.">네 완료 했습니다.</button>
-            <button type="button" class="chip" data-value="런드리24">런드리24</button>
           </div>
           <input type="hidden" name="런드리고배송완료처리" value="">
         </div>
