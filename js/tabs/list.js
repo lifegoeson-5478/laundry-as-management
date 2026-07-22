@@ -35,15 +35,15 @@ function closeStatusPortal_() {
 async function renderListTab(container, params) {
   container.innerHTML = '<div>불러오는 중...</div>';
 
-  const listResult = await callApi('listAS', {});
-  const statusResult = await callApi('listStatus', {});
+  const [listResult, statusOptions] = await Promise.all([
+    callApi('listAS', {}),
+    getStatusOptions()
+  ]);
 
   if (!listResult.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(listResult.error)}</div>`;
     return;
   }
-
-  const statusOptions = statusResult.ok ? statusResult.items : [];
   let currentFilter = '전체';
   let searchText = '';
 

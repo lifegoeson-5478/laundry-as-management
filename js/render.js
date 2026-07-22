@@ -29,6 +29,19 @@ function formatDateOnly(str) {
   return idx !== -1 ? s.slice(0, idx) : s;
 }
 
+let statusOptionsCache = null;
+
+async function getStatusOptions() {
+  if (statusOptionsCache) return statusOptionsCache;
+  const result = await callApi('listStatus', {});
+  if (result.ok) statusOptionsCache = result.items;
+  return statusOptionsCache || [];
+}
+
+function invalidateStatusCache() {
+  statusOptionsCache = null;
+}
+
 function computeAgingBucketClient(pickupDateStr, todayDate) {
   const pickup = new Date(pickupDateStr);
   const today = todayDate || new Date();

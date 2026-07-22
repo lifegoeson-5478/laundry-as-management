@@ -61,7 +61,7 @@ async function renderSettingsTab(container) {
       btn.addEventListener('click', async () => {
         const name = btn.closest('.card').dataset.name;
         const result = await callApi('deleteStatus', { name: name });
-        if (result.ok) loadStatus();
+        if (result.ok) { invalidateStatusCache(); loadStatus(); }
         else await showAlert('삭제 실패: ' + result.error);
       });
     });
@@ -80,7 +80,7 @@ async function renderSettingsTab(container) {
     e.preventDefault();
     const name = new FormData(e.target).get('name');
     const result = await callApi('addStatus', { name: name });
-    if (result.ok) { e.target.reset(); loadStatus(); }
+    if (result.ok) { e.target.reset(); invalidateStatusCache(); loadStatus(); }
     else await showAlert('추가 실패: ' + result.error);
   });
 
