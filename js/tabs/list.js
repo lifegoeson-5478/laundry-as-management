@@ -28,7 +28,7 @@ async function renderListTab(container) {
     const items = filterFn ? listResult.items.filter(filterFn) : listResult.items;
 
     const filterButtons = Object.keys(LIST_FILTERS).map((name) =>
-      `<button data-filter="${escapeHtml(name)}" class="${name === currentFilter ? 'active' : ''}">${escapeHtml(name)}</button>`
+      `<button data-filter="${escapeHtml(name)}" class="list-tab ${name === currentFilter ? 'active' : ''}">${escapeHtml(name)}</button>`
     ).join('');
 
     const rows = items.map((item) => {
@@ -45,11 +45,11 @@ async function renderListTab(container) {
     }).join('');
 
     container.innerHTML = `
-      <div id="list-filters">${filterButtons}</div>
+      <div id="list-tab-bar">${filterButtons}</div>
       <div id="list-items">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
     `;
 
-    container.querySelectorAll('#list-filters button').forEach((btn) => {
+    container.querySelectorAll('#list-tab-bar button').forEach((btn) => {
       btn.addEventListener('click', () => {
         currentFilter = btn.dataset.filter;
         draw();

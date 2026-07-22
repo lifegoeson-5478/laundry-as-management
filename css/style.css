@@ -18,6 +18,9 @@ main { padding: 16px; }
   width: min(90vw, 400px); max-height: 85vh; overflow-y: auto;
 }
 #field-modal-close { float: right; }
+#list-tab-bar { display: flex; gap: 4px; border-bottom: 2px solid #ddd; margin-bottom: 12px; flex-wrap: wrap; }
+.list-tab { padding: 8px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.list-tab.active { border-bottom-color: #333; font-weight: bold; }
 @media (max-width: 480px) {
   #tab-nav button { flex: 1 1 40%; }
 }

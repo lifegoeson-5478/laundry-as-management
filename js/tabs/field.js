@@ -2,8 +2,7 @@ const FIELD_STATUS_BUTTONS = ['AS불가', '진행중', '수거완료'];
 
 const FIELD_SECTIONS = [
   ['접수 필요', (item) => item.상태 === '접수 필요'],
-  ['회수 필요', (item) => item.상태 === '회수 필요'],
-  ['그 외 진행중', (item) => item.상태 !== '접수 필요' && item.상태 !== '회수 필요']
+  ['회수 필요', (item) => item.상태 === '회수 필요']
 ];
 
 let fieldItemsById = {};
