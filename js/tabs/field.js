@@ -1,6 +1,23 @@
 const FIELD_STATUS_BUTTONS = ['AS불가', '진행중', '수거완료'];
 
+const FIELD_SECTIONS = [
+  ['접수 필요', (item) => item.상태 === '접수 필요'],
+  ['회수 필요', (item) => item.상태 === '회수 필요'],
+  ['그 외 진행중', (item) => item.상태 !== '접수 필요' && item.상태 !== '회수 필요']
+];
+
 let fieldItemsById = {};
+
+function renderFieldRow(item) {
+  return `
+    <div class="field-row" data-id="${escapeHtml(item.id)}">
+      <strong>${escapeHtml(item.브랜드)}</strong>
+      <div>회원카드: ${escapeHtml(item.회원카드)} · 바코드번호: ${escapeHtml(item.바코드번호)}</div>
+      <div>손상부위: ${escapeHtml(item.손상부위)}</div>
+      <div>매장위치: ${escapeHtml(item.매장위치)} · 현재상태: ${escapeHtml(item.상태)}</div>
+    </div>
+  `;
+}
 
 async function renderFieldTab(container) {
   container.innerHTML = '<div>불러오는 중...</div>';
@@ -16,15 +33,17 @@ async function renderFieldTab(container) {
   fieldItemsById = {};
   openItems.forEach((item) => { fieldItemsById[item.id] = item; });
 
-  const rows = openItems.map((item) => `
-    <div class="field-row" data-id="${escapeHtml(item.id)}">
-      <strong>${escapeHtml(item.브랜드)}</strong> / ${escapeHtml(item.품목)}
-      <div>매장위치: ${escapeHtml(item.매장위치)} · 현재상태: ${escapeHtml(item.상태)}</div>
-    </div>
-  `).join('');
+  const sectionsHtml = FIELD_SECTIONS.map(([title, filterFn]) => {
+    const items = openItems.filter(filterFn);
+    const rows = items.map(renderFieldRow).join('');
+    return `
+      <h2>${escapeHtml(title)} (${items.length})</h2>
+      <div class="field-row-list">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
+    `;
+  }).join('');
 
   container.innerHTML = `
-    <div id="field-row-list">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
+    ${sectionsHtml}
     <div id="field-modal-overlay" style="display:none;">
       <div id="field-modal">
         <button id="field-modal-close">닫기</button>
