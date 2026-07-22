@@ -15,7 +15,7 @@ function createSessionToken(email, name, role) {
     role: role,
     exp: Date.now() + 8 * 60 * 60 * 1000 // 8시간
   };
-  var payloadStr = Utilities.base64EncodeWebSafe(JSON.stringify(payload));
+  var payloadStr = Utilities.base64EncodeWebSafe(JSON.stringify(payload), Utilities.Charset.UTF_8);
   var signature = Utilities.base64EncodeWebSafe(
     Utilities.computeHmacSha256Signature(payloadStr, getSessionSecret_())
   );
@@ -34,7 +34,7 @@ function verifySessionToken(token) {
 
   var payload = JSON.parse(Utilities.newBlob(
     Utilities.base64DecodeWebSafe(payloadStr)
-  ).getDataAsString());
+  ).getDataAsString('UTF-8'));
 
   if (payload.exp < Date.now()) return null;
   return payload;

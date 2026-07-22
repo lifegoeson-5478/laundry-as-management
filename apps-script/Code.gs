@@ -16,6 +16,10 @@ function requireAdmin_(payload) {
   return session;
 }
 
+function doGet(e) {
+  return jsonResponse({ ok: false, error: '이 API는 POST 요청만 지원합니다.' });
+}
+
 function doPost(e) {
   var body;
   try {

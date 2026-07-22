@@ -10,10 +10,8 @@ const LIST_FILTERS = {
 async function renderListTab(container) {
   container.innerHTML = '<div>불러오는 중...</div>';
 
-  const [listResult, statusResult] = await Promise.all([
-    callApi('listAS', {}),
-    callApi('listStatus', {})
-  ]);
+  const listResult = await callApi('listAS', {});
+  const statusResult = await callApi('listStatus', {});
 
   if (!listResult.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(listResult.error)}</div>`;
