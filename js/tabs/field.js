@@ -10,10 +10,11 @@ let fieldItemsById = {};
 function renderFieldRow(item) {
   return `
     <div class="field-row" data-id="${escapeHtml(item.id)}">
-      <strong>${escapeHtml(item.브랜드)}</strong>
-      <div>회원카드: ${escapeHtml(item.회원카드)} · 바코드번호: ${escapeHtml(item.바코드번호)}</div>
-      <div>손상부위: ${escapeHtml(item.손상부위)}</div>
-      <div>매장위치: ${escapeHtml(item.매장위치)} · ${statusBadge(item.상태)}</div>
+      <div class="field-row-main">
+        <strong>${escapeHtml(item.브랜드)}</strong>
+        <div class="field-row-sub">회원카드 ${escapeHtml(item.회원카드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
+      </div>
+      ${statusBadge(item.상태)}
     </div>
   `;
 }

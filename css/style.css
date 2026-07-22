@@ -88,8 +88,13 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 /* Field tab */
 .field-status-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); }
 .field-save-btn { display: block; margin-top: 8px; }
-.field-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; background: var(--surface); box-shadow: var(--shadow); }
-.field-row:hover { border-color: var(--brand); }
+.field-row-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.field-row:last-child { border-bottom: none; }
+.field-row:hover { background: #fafcfb; }
+.field-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.field-row-main strong { font-size: 14px; }
+.field-row-sub { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #field-modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(16, 33, 28, 0.45);
@@ -117,7 +122,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 
 /* Tab bar (list/field sub-tabs) */
 #list-tab-bar { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
-.list-tab { padding: 8px 14px; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--text-muted); }
+.list-tab { padding: 8px 14px; border: none; border-radius: 0; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; color: var(--text-muted); }
 .list-tab.active { border-bottom-color: var(--brand); color: var(--brand-dark); font-weight: 700; }
 
 /* List table */
@@ -127,8 +132,17 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .list-table tbody tr:hover { background: #fafcfb; }
 .delete-as-btn { background: #fff; border: 1px solid var(--danger); color: var(--danger); }
 .delete-as-btn:hover { background: var(--danger); color: #fff; }
-.status-cell { display: flex; align-items: center; gap: 8px; }
-.status-cell select { width: auto; }
+.status-cell { position: relative; display: inline-block; }
+.status-chip-trigger { border: none; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.status-chip-trigger:hover { filter: brightness(0.95); }
+.status-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 150px;
+  background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 4px; max-height: 220px; overflow-y: auto;
+}
+.status-option { padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.status-option:hover { background: var(--neutral-tint); }
+.status-option.current { font-weight: 700; color: var(--brand-dark); }
 
 /* Dashboard stat cards */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0 8px; }

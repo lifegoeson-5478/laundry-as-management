@@ -30,8 +30,8 @@ async function renderListTab(container) {
     ).join('');
 
     const rows = items.map((item) => {
-      const statusOptionsHtml = statusOptions.map((s) =>
-        `<option value="${escapeHtml(s)}" ${s === item.상태 ? 'selected' : ''}>${escapeHtml(s)}</option>`
+      const optionsHtml = statusOptions.map((s) =>
+        `<div class="status-option ${s === item.상태 ? 'current' : ''}" data-value="${escapeHtml(s)}">${escapeHtml(s)}</div>`
       ).join('');
       return `
         <tr data-id="${escapeHtml(item.id)}">
@@ -42,8 +42,8 @@ async function renderListTab(container) {
           <td>${escapeHtml(item.접수자)}</td>
           <td>
             <div class="status-cell">
-              ${statusBadge(item.상태)}
-              <select class="status-select">${statusOptionsHtml}</select>
+              <button type="button" class="status-chip-trigger ${statusBadgeClass(item.상태)}">${escapeHtml(item.상태)}</button>
+              <div class="status-dropdown" hidden>${optionsHtml}</div>
             </div>
           </td>
           <td><button class="delete-as-btn">삭제</button></td>
@@ -72,20 +72,40 @@ async function renderListTab(container) {
       });
     });
 
-    container.querySelectorAll('.status-select').forEach((select) => {
-      select.addEventListener('change', async (e) => {
-        const id = e.target.closest('tr').dataset.id;
-        const newStatus = e.target.value;
+    function closeAllStatusDropdowns() {
+      container.querySelectorAll('.status-dropdown').forEach((d) => { d.hidden = true; });
+    }
+
+    container.querySelectorAll('.status-chip-trigger').forEach((trigger) => {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = trigger.nextElementSibling;
+        const wasHidden = dropdown.hidden;
+        closeAllStatusDropdowns();
+        dropdown.hidden = !wasHidden;
+      });
+    });
+
+    container.querySelectorAll('.status-option').forEach((option) => {
+      option.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const cell = option.closest('.status-cell');
+        const id = option.closest('tr').dataset.id;
+        const newStatus = option.dataset.value;
         const result = await callApi('updateStatus', { id: id, status: newStatus });
+        cell.querySelector('.status-dropdown').hidden = true;
         if (!result.ok) {
           await showAlert('상태 변경 실패: ' + result.error);
           return;
         }
         const item = listResult.items.find((i) => i.id === id);
         if (item) item.상태 = newStatus;
-        const badge = e.target.closest('.status-cell').querySelector('.badge');
-        badge.className = 'badge ' + statusBadgeClass(newStatus);
-        badge.textContent = newStatus;
+        const trigger = cell.querySelector('.status-chip-trigger');
+        trigger.className = 'status-chip-trigger ' + statusBadgeClass(newStatus);
+        trigger.textContent = newStatus;
+        cell.querySelectorAll('.status-option').forEach((o) => {
+          o.classList.toggle('current', o.dataset.value === newStatus);
+        });
       });
     });
 
@@ -106,4 +126,8 @@ async function renderListTab(container) {
   }
 
   draw();
+
+  document.addEventListener('click', () => {
+    container.querySelectorAll('.status-dropdown').forEach((d) => { d.hidden = true; });
+  });
 }
