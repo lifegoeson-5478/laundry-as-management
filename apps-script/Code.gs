@@ -31,6 +31,10 @@ function doPost(e) {
     switch (action) {
       case 'login':
         return jsonResponse(handleLogin_(payload));
+      case 'submitAS':
+        return jsonResponse(handleSubmitAS_(payload));
+      case 'listAS':
+        return jsonResponse(handleListAS_(payload));
       default:
         return jsonResponse({ ok: false, error: '알 수 없는 action입니다: ' + action });
     }
