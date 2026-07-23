@@ -79,7 +79,7 @@ h2 { font-size: 15px; color: var(--text-muted); margin-top: 26px; text-transform
 }
 #logout-button:hover { background: #333 !important; }
 
-main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+main { padding: 24px; max-width: 1360px; margin: 0 auto; }
 
 /* Generic surfaces */
 .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; background: var(--surface); box-shadow: var(--shadow); }
@@ -212,6 +212,11 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 /* List table */
 .list-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 .list-table th, .list-table td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: left; font-size: 13.5px; }
+@media (min-width: 481px) {
+  .list-table td[data-label="고객분류"],
+  .list-table td[data-label="접수일"],
+  .list-table td[data-label="접수자"] { white-space: nowrap; }
+}
 .list-table thead th { background: var(--bg); font-weight: 700; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
 .list-table tbody tr { transition: background .1s; }
 .list-table tbody tr:hover { background: #f0fdf9; }
