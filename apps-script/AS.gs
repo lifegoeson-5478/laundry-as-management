@@ -90,7 +90,7 @@ function handleUpdateStatus_(payload) {
 }
 
 function handleFieldUpdate_(payload) {
-  requireSession_(payload);
+  var session = requireSession_(payload);
   if (!payload.id || !payload.fieldStatus) {
     return { ok: false, error: 'id와 fieldStatus가 필요합니다.' };
   }
@@ -103,5 +103,24 @@ function handleFieldUpdate_(payload) {
     현장메모: payload.memo || ''
   });
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+
+  var item = getAllRows('AS접수').find(function (r) { return r.id === payload.id; });
+  var mention = mentionForStaffName_(item ? item.접수자 : '');
+  var laundry = [item ? item.브랜드 : '', item ? item.품목 : '', item ? item.색상 : '', item ? item.손상부위 : '']
+    .filter(function (v) { return v; })
+    .join(' / ');
+
+  var messageLines = [
+    '📦 현장 업데이트',
+    '담당자: ' + mention,
+    '회원카드: ' + (item ? item.회원카드 : ''),
+    '회원번호: ' + (item ? item.회원연락처 : ''),
+    '바코드: ' + (item ? item.바코드번호 : ''),
+    'AS 세탁물: ' + laundry,
+    '상태: ' + mappedStatus,
+    '메모: ' + (payload.memo || '')
+  ];
+  sendSlackMessage_(messageLines.join('\n'));
+
   return { ok: true };
 }
