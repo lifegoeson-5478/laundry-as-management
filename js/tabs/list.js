@@ -86,17 +86,17 @@ async function renderListTab(container, params) {
 
     const rows = items.map((item) => `
       <tr data-id="${escapeHtml(item.id)}">
-        <td>${escapeHtml(item.고객분류)}</td>
-        <td>${escapeHtml(item.회원연락처)}</td>
-        <td>${escapeHtml(item.회원카드)}</td>
-        <td>${escapeHtml(item.바코드번호)}</td>
-        <td>${escapeHtml(item.품목)}</td>
-        <td>${escapeHtml(formatDateOnly(item.접수일시))}</td>
-        <td>${escapeHtml(item.접수자)}</td>
-        <td>
+        <td data-label="고객분류">${escapeHtml(item.고객분류)}</td>
+        <td data-label="휴대폰번호">${escapeHtml(item.회원연락처)}</td>
+        <td data-label="회원카드">${escapeHtml(item.회원카드)}</td>
+        <td data-label="바코드번호">${escapeHtml(item.바코드번호)}</td>
+        <td data-label="품목">${escapeHtml(item.품목)}</td>
+        <td data-label="접수일">${escapeHtml(formatDateOnly(item.접수일시))}</td>
+        <td data-label="접수자">${escapeHtml(item.접수자)}</td>
+        <td data-label="상태">
           <button type="button" class="status-chip-trigger ${statusBadgeClass(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
         </td>
-        <td><button class="delete-as-btn">삭제</button></td>
+        <td data-label=""><button class="delete-as-btn">삭제</button></td>
       </tr>
     `).join('');
 

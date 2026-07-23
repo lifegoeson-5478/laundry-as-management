@@ -14,7 +14,7 @@ async function renderDashboardTab(container) {
   `).join('');
 
   const staffRows = Object.entries(result.byStaff).map(([name, count]) => `
-    <tr class="clickable-row" data-staff="${escapeHtml(name)}"><td>${escapeHtml(name)}</td><td>${count}</td></tr>
+    <tr class="clickable-row" data-staff="${escapeHtml(name)}"><td data-label="담당자">${escapeHtml(name)}</td><td data-label="진행중 건수">${count}</td></tr>
   `).join('') || '<tr><td colspan="2">진행중인 건이 없습니다.</td></tr>';
 
   const maxCustomerCount = Math.max(1, ...Object.values(result.byCustomerType));
