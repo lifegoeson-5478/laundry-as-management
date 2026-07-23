@@ -42,6 +42,23 @@ function invalidateStatusCache() {
   statusOptionsCache = null;
 }
 
+function loadingScreen(subtitle) {
+  return `
+    <div class="loading-state">
+      <div class="loading-illust">
+        <div class="loading-illust-glow"></div>
+        <div class="loading-illust-card">
+          <div class="loading-illust-bar"></div>
+          <div class="loading-illust-line"></div>
+          <div class="loading-illust-line short"></div>
+        </div>
+        <div class="loading-illust-ring"></div>
+      </div>
+      <h3>잠시만 기다려 주세요</h3>
+      <p>${escapeHtml(subtitle || '데이터를 불러오고 있어요')}</p>
+    </div>`;
+}
+
 function computeAgingBucketClient(pickupDateStr, todayDate) {
   const pickup = new Date(pickupDateStr);
   const today = todayDate || new Date();

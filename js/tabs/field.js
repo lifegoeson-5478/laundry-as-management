@@ -20,7 +20,7 @@ function renderFieldRow(item) {
 }
 
 async function renderFieldTab(container, params) {
-  container.innerHTML = '<div>불러오는 중...</div>';
+  container.innerHTML = loadingScreen('현장 처리 목록을 불러오고 있어요');
   const result = await callApi('listAS', {});
   if (!result.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
@@ -46,7 +46,7 @@ async function renderFieldTab(container, params) {
 
     container.innerHTML = `
       <div id="list-tab-bar">${tabButtons}</div>
-      <div class="field-row-list">${rows || '<div>표시할 항목이 없습니다.</div>'}</div>
+      <div class="field-row-list">${rows || '<div class="field-empty">표시할 항목이 없습니다.</div>'}</div>
     `;
 
     container.querySelectorAll('#list-tab-bar button').forEach((btn) => {

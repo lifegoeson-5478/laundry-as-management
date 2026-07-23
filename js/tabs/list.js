@@ -33,7 +33,7 @@ function closeStatusPortal_() {
 }
 
 async function renderListTab(container, params) {
-  container.innerHTML = '<div>불러오는 중...</div>';
+  container.innerHTML = loadingScreen('접수 목록을 불러오고 있어요');
 
   const [listResult, statusOptions] = await Promise.all([
     callApi('listAS', {}),

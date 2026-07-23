@@ -1,5 +1,5 @@
 async function renderDashboardTab(container) {
-  container.innerHTML = '<div>불러오는 중...</div>';
+  container.innerHTML = loadingScreen('대시보드 현황을 불러오고 있어요');
   const result = await callApi('dashboard', {});
   if (!result.ok) {
     container.innerHTML = `<div>대시보드를 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
