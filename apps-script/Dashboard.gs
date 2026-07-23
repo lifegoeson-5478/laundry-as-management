@@ -28,6 +28,12 @@ function handleDashboard_(payload) {
     byCustomerType[type] = (byCustomerType[type] || 0) + 1;
   });
 
+  var byStatus = {};
+  openRows.forEach(function (r) {
+    var status = r.상태 || '(미상)';
+    byStatus[status] = (byStatus[status] || 0) + 1;
+  });
+
   return {
     ok: true,
     needIntake: needIntake,
@@ -35,6 +41,7 @@ function handleDashboard_(payload) {
     agingBuckets: agingBuckets,
     byStaff: byStaff,
     byCustomerType: byCustomerType,
+    byStatus: byStatus,
     totalCount: rows.length,
     totalOpen: openRows.length,
     totalClosed: rows.length - openRows.length
