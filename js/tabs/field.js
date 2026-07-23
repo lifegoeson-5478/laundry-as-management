@@ -1,3 +1,5 @@
+const FIELD_CONTACT = { name: '최인영', phone: '010-8488-5416' };
+
 const FIELD_STATUS_BUTTONS = ['AS불가', '진행중', '수거완료'];
 
 const FIELD_SECTIONS = [
@@ -45,6 +47,13 @@ async function renderFieldTab(container, params) {
     const rows = items.map(renderFieldRow).join('');
 
     container.innerHTML = `
+      <div class="field-contact-card">
+        <div class="field-contact-icon">☎</div>
+        <div class="field-contact-info">
+          <div class="field-contact-label">담당자</div>
+          <div class="field-contact-main">${escapeHtml(FIELD_CONTACT.name)} · ${escapeHtml(FIELD_CONTACT.phone)}</div>
+        </div>
+      </div>
       <div id="list-tab-bar">${tabButtons}</div>
       <div class="field-row-list">${rows || '<div class="field-empty">표시할 항목이 없습니다.</div>'}</div>
     `;
