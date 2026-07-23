@@ -134,6 +134,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .list-table th, .list-table td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: left; font-size: 13px; }
 .list-table thead th { background: #fafcfb; font-weight: 700; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
 .list-table tbody tr:hover { background: #fafcfb; }
+.staff-table th:last-child, .staff-table td:last-child { text-align: right; }
 .delete-as-btn { background: #fff; border: 1px solid var(--danger); color: var(--danger); }
 .delete-as-btn:hover { background: var(--danger); color: #fff; }
 .status-chip-trigger { border: none; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -214,4 +215,15 @@ button.btn-outline-block:hover { border-color: var(--text-muted); }
     content: attr(data-label); font-weight: 600; color: var(--text-muted);
     text-align: left; flex-shrink: 0;
   }
+
+  /* 담당자별 진행 현황: 이름/건수 한 줄 표 유지 */
+  .staff-table, .staff-table thead, .staff-table tbody, .staff-table tr { display: table; width: 100%; }
+  .staff-table thead { display: table-header-group; }
+  .staff-table tbody { display: table-row-group; }
+  .staff-table tr { display: table-row; margin-bottom: 0; border: none; border-radius: 0; }
+  .staff-table th, .staff-table td {
+    display: table-cell; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .staff-table th:last-child, .staff-table td:last-child { text-align: right; }
+  .staff-table td::before { content: none; }
 }

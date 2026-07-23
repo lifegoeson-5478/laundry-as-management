@@ -53,7 +53,7 @@ async function renderDashboardTab(container) {
     <div class="bar-chart">${customerBars}</div>
 
     <h2>담당자별 진행 현황</h2>
-    <table class="list-table">
+    <table class="list-table staff-table">
       <thead><tr><th>담당자</th><th>진행중 건수</th></tr></thead>
       <tbody>${staffRows}</tbody>
     </table>
