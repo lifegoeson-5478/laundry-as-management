@@ -84,8 +84,9 @@ async function renderListTab(container, params) {
       </div>
     ` : '';
 
-    const rows = items.map((item) => `
+    const rows = items.map((item, index) => `
       <tr data-id="${escapeHtml(item.id)}">
+        <td data-label="순번">${index + 1}</td>
         <td data-label="고객분류">${escapeHtml(item.고객분류)}</td>
         <td data-label="휴대폰번호">${escapeHtml(item.회원연락처)}</td>
         <td data-label="회원카드">${escapeHtml(item.회원카드)}</td>
@@ -107,11 +108,11 @@ async function renderListTab(container, params) {
       <table class="list-table">
         <thead>
           <tr>
-            <th>고객분류</th><th>휴대폰번호</th><th>회원카드</th><th>바코드번호</th><th>품목</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
+            <th>순번</th><th>고객분류</th><th>휴대폰번호</th><th>회원카드</th><th>바코드번호</th><th>품목</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="9">표시할 항목이 없습니다.</td></tr>`}
+          ${rows || `<tr><td colspan="10">표시할 항목이 없습니다.</td></tr>`}
         </tbody>
       </table>
     `;

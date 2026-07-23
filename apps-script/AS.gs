@@ -47,7 +47,7 @@ function handleListAS_(payload) {
   requireSession_(payload);
   var rows = getAllRows('AS접수');
   rows.sort(function (a, b) {
-    return new Date(b.접수일시) - new Date(a.접수일시);
+    return new Date(a.접수일시) - new Date(b.접수일시);
   });
   return { ok: true, items: rows };
 }

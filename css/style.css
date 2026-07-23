@@ -213,6 +213,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .list-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 .list-table th, .list-table td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: left; font-size: 13.5px; }
 @media (min-width: 481px) {
+  .list-table td[data-label="순번"],
   .list-table td[data-label="고객분류"],
   .list-table td[data-label="접수일"],
   .list-table td[data-label="접수자"] { white-space: nowrap; }
