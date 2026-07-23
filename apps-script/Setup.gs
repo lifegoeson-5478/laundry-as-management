@@ -13,7 +13,7 @@ function setupSpreadsheet() {
   var staffHeaders = ['이메일', '이름', '역할', '활성여부'];
   createSheetIfMissing_(ss, '직원목록', staffHeaders);
 
-  var statusHeaders = ['상태명', '정렬순서', '색상'];
+  var statusHeaders = ['상태명', '정렬순서', '색상', '글자색'];
   var statusSheet = createSheetIfMissing_(ss, '상태값', statusHeaders);
   var initialStatuses = [
     '접수 필요', '매장 접수 완료', '회수 필요', '회수 완료',
@@ -26,7 +26,7 @@ function setupSpreadsheet() {
   ];
   if (statusSheet.getLastRow() === 1) {
     initialStatuses.forEach(function (name, i) {
-      statusSheet.appendRow([name, i + 1, defaultStatusColor_(name)]);
+      statusSheet.appendRow([name, i + 1, defaultStatusColor_(name), '']);
     });
   }
 

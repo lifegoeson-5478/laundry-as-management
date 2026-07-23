@@ -89,7 +89,8 @@ async function renderSettingsTab(container) {
       <div id="status-list">${loadingScreen('상태값 목록을 불러오고 있어요')}</div>
       <form id="add-status-form" class="settings-form">
         <input type="text" name="name" placeholder="새 상태값" required>
-        <input type="color" name="color" value="#00a991" title="색상">
+        <label class="settings-color-label">배경<input type="color" name="color" value="#00a991" title="배경색"></label>
+        <label class="settings-color-label">글자<input type="color" name="textColor" value="#ffffff" title="글자색"></label>
         <button type="submit" class="btn-primary-block">추가</button>
       </form>
     `;
@@ -102,19 +103,23 @@ async function renderSettingsTab(container) {
       invalidateStatusCache();
       await getStatusOptions();
       list.innerHTML = result.items.map((item) => `
-        <div class="card settings-row" data-name="${escapeHtml(item.name)}">
+        <div class="card settings-row" data-name="${escapeHtml(item.name)}" data-color="${item.color || ''}" data-text-color="${item.textColor || ''}">
           ${statusBadge(item.name)}
           <div class="settings-row-actions">
-            <input type="color" class="status-color-input" value="${item.color || '#9aa0ad'}" title="색상 선택">
+            <label class="settings-color-label">배경<input type="color" class="status-color-input" value="${item.color || '#9aa0ad'}" title="배경색"></label>
+            <label class="settings-color-label">글자<input type="color" class="status-text-color-input" value="${item.textColor || textColorForBg(item.color || '#9aa0ad')}" title="글자색"></label>
             <button type="button" class="delete-status-btn btn-outline-small">삭제</button>
           </div>
         </div>
       `).join('') || '<div class="field-empty">등록된 상태값이 없습니다.</div>';
 
-      list.querySelectorAll('.status-color-input').forEach((input) => {
+      list.querySelectorAll('.status-color-input, .status-text-color-input').forEach((input) => {
         input.addEventListener('change', async (e) => {
-          const name = e.target.closest('.card').dataset.name;
-          const result = await callApi('updateStatusColor', { name: name, color: e.target.value });
+          const card = e.target.closest('.card');
+          const name = card.dataset.name;
+          const color = card.querySelector('.status-color-input').value;
+          const textColor = card.querySelector('.status-text-color-input').value;
+          const result = await callApi('updateStatusColor', { name: name, color: color, textColor: textColor });
           if (result.ok) { invalidateStatusCache(); loadStatus(); }
           else await showAlert('색상 변경 실패: ' + result.error);
         });
@@ -136,7 +141,8 @@ async function renderSettingsTab(container) {
       const formData = new FormData(e.target);
       const name = formData.get('name');
       const color = formData.get('color');
-      const result = await callApi('addStatus', { name: name, color: color });
+      const textColor = formData.get('textColor');
+      const result = await callApi('addStatus', { name: name, color: color, textColor: textColor });
       if (result.ok) { e.target.reset(); invalidateStatusCache(); loadStatus(); }
       else await showAlert('추가 실패: ' + result.error);
     });

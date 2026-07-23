@@ -21,7 +21,7 @@ function statusBadgeClass(status) {
 function statusBadge(status) {
   const color = statusColorFor(status);
   if (color) {
-    return `<span class="badge" style="background:${color};color:${textColorForBg(color)}">${escapeHtml(status)}</span>`;
+    return `<span class="badge" style="background:${color};color:${statusTextColorFor(status)}">${escapeHtml(status)}</span>`;
   }
   return `<span class="badge ${statusBadgeClass(status)}">${escapeHtml(status)}</span>`;
 }
@@ -32,7 +32,7 @@ function statusChipClass(status) {
 
 function statusChipStyle(status) {
   const color = statusColorFor(status);
-  return color ? `background:${color};color:${textColorForBg(color)};` : '';
+  return color ? `background:${color};color:${statusTextColorFor(status)};` : '';
 }
 
 function formatDateOnly(str) {
@@ -59,6 +59,14 @@ function statusColorFor(status) {
   if (!statusOptionsCache) return '';
   const found = statusOptionsCache.find((s) => s.name === status);
   return (found && found.color) || '';
+}
+
+function statusTextColorFor(status) {
+  if (statusOptionsCache) {
+    const found = statusOptionsCache.find((s) => s.name === status);
+    if (found && found.textColor) return found.textColor;
+  }
+  return textColorForBg(statusColorFor(status));
 }
 
 function textColorForBg(hex) {
