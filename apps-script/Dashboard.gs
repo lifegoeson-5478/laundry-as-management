@@ -34,6 +34,14 @@ function handleDashboard_(payload) {
     byStatus[status] = (byStatus[status] || 0) + 1;
   });
 
+  var statusByCustomerType = { '런드리고': {}, '런드리24': {} };
+  openRows.forEach(function (r) {
+    var type = r.고객분류;
+    if (type !== '런드리고' && type !== '런드리24') return;
+    var status = r.상태 || '(미상)';
+    statusByCustomerType[type][status] = (statusByCustomerType[type][status] || 0) + 1;
+  });
+
   return {
     ok: true,
     needIntake: needIntake,
@@ -42,6 +50,7 @@ function handleDashboard_(payload) {
     byStaff: byStaff,
     byCustomerType: byCustomerType,
     byStatus: byStatus,
+    statusByCustomerType: statusByCustomerType,
     totalCount: rows.length,
     totalOpen: openRows.length,
     totalClosed: rows.length - openRows.length

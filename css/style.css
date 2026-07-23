@@ -255,14 +255,13 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .bar-value { width: 32px; text-align: right; font-size: 13px; font-weight: 800; flex-shrink: 0; }
 
 /* Stacked status bar */
+.stacked-bar-group { margin-bottom: 16px; }
+.stacked-bar-group-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.stacked-bar-group-label span { font-weight: 600; color: var(--text-faint); margin-left: 6px; }
 .stacked-bar { display: flex; width: 100%; height: 22px; border-radius: 8px; overflow: hidden; background: var(--neutral-tint); }
 .stacked-bar-segment { transition: filter .15s; cursor: pointer; }
 .stacked-bar-segment:hover { filter: brightness(0.92); }
 .stacked-bar-segment.empty { background: var(--neutral-tint); cursor: default; }
-.stacked-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; }
-.stacked-legend-item { font-size: 12.5px; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
-.stacked-legend-item strong { color: var(--text); }
-.stacked-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .stack-tooltip {
   position: absolute; z-index: 3000; transform: translate(-50%, -100%); pointer-events: none;
   background: #1a1d23; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12.5px;

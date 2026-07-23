@@ -46,18 +46,24 @@ async function renderDashboardTab(container) {
     <tr class="clickable-row" data-staff="${escapeHtml(name)}"><td data-label="담당자">${escapeHtml(name)}</td><td data-label="진행중 건수">${count}</td></tr>
   `).join('') || '<tr><td colspan="2">진행중인 건이 없습니다.</td></tr>';
 
-  const statusEntries = Object.entries(result.byStatus || {}).filter(([, count]) => count > 0);
-  const totalStatusCount = statusEntries.reduce((sum, [, count]) => sum + count, 0);
-  const stackedSegments = statusEntries.map(([name, count]) => {
-    const color = statusColorFor(name) || '#9aa0ad';
-    const pct = totalStatusCount ? (count / totalStatusCount) * 100 : 0;
-    return `<div class="stacked-bar-segment" style="width:${pct}%;background:${color}" data-name="${escapeHtml(name)}" data-count="${count}"></div>`;
-  }).join('');
-  const legendItems = statusEntries.map(([name, count]) => {
-    const color = statusColorFor(name) || '#9aa0ad';
+  function buildStackedBar(statusCounts) {
+    const entries = Object.entries(statusCounts || {}).filter(([, count]) => count > 0);
+    const total = entries.reduce((sum, [, count]) => sum + count, 0);
+    const segments = entries.map(([name, count]) => {
+      const color = statusColorFor(name) || '#9aa0ad';
+      const pct = total ? (count / total) * 100 : 0;
+      return `<div class="stacked-bar-segment" style="width:${pct}%;background:${color}" data-name="${escapeHtml(name)}" data-count="${count}"></div>`;
+    }).join('');
+    return { total, html: segments || '<div class="stacked-bar-segment empty" style="width:100%"></div>' };
+  }
+
+  const customerTypes = ['런드리고', '런드리24'];
+  const customerBars = customerTypes.map((type) => {
+    const { total, html } = buildStackedBar(result.statusByCustomerType && result.statusByCustomerType[type]);
     return `
-      <div class="stacked-legend-item">
-        <span class="stacked-legend-dot" style="background:${color}"></span>${escapeHtml(name)} <strong>${count}</strong>
+      <div class="stacked-bar-group">
+        <div class="stacked-bar-group-label">${escapeHtml(type)} <span>진행중 ${total}건</span></div>
+        <div class="stacked-bar">${html}</div>
       </div>
     `;
   }).join('');
@@ -85,9 +91,8 @@ async function renderDashboardTab(container) {
     <h2>경과기간별 수량</h2>
     <div class="stat-grid">${agingCards}</div>
 
-    <h2>상태별 현황 (진행중 총 ${totalStatusCount}건)</h2>
-    <div class="stacked-bar">${stackedSegments || '<div class="stacked-bar-segment empty" style="width:100%"></div>'}</div>
-    <div class="stacked-legend">${legendItems || '<div class="field-empty">진행중인 건이 없습니다.</div>'}</div>
+    <h2>고객분류별 상태 현황</h2>
+    ${customerBars}
 
     <h2>담당자별 진행 현황</h2>
     <table class="list-table staff-table">
