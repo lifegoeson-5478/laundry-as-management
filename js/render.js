@@ -19,7 +19,20 @@ function statusBadgeClass(status) {
 }
 
 function statusBadge(status) {
+  const color = statusColorFor(status);
+  if (color) {
+    return `<span class="badge" style="background:${color};color:${textColorForBg(color)}">${escapeHtml(status)}</span>`;
+  }
   return `<span class="badge ${statusBadgeClass(status)}">${escapeHtml(status)}</span>`;
+}
+
+function statusChipClass(status) {
+  return statusColorFor(status) ? '' : statusBadgeClass(status);
+}
+
+function statusChipStyle(status) {
+  const color = statusColorFor(status);
+  return color ? `background:${color};color:${textColorForBg(color)};` : '';
 }
 
 function formatDateOnly(str) {
@@ -40,6 +53,22 @@ async function getStatusOptions() {
 
 function invalidateStatusCache() {
   statusOptionsCache = null;
+}
+
+function statusColorFor(status) {
+  if (!statusOptionsCache) return '';
+  const found = statusOptionsCache.find((s) => s.name === status);
+  return (found && found.color) || '';
+}
+
+function textColorForBg(hex) {
+  const c = String(hex || '').replace('#', '');
+  if (c.length !== 6) return '#1a1d23';
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150 ? '#1a1d23' : '#ffffff';
 }
 
 function loadingScreen(subtitle) {

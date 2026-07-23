@@ -94,7 +94,7 @@ async function renderListTab(container, params) {
         <td data-label="접수일">${escapeHtml(formatDateOnly(item.접수일시))}</td>
         <td data-label="접수자">${escapeHtml(item.접수자)}</td>
         <td data-label="상태">
-          <button type="button" class="status-chip-trigger ${statusBadgeClass(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
+          <button type="button" class="status-chip-trigger ${statusChipClass(item.상태)}" style="${statusChipStyle(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
         </td>
         <td data-label=""><button class="delete-as-btn">삭제</button></td>
       </tr>
@@ -182,7 +182,9 @@ async function renderListTab(container, params) {
 
     portal.dataset.forId = id;
     portal.innerHTML = statusOptions.map((s) =>
-      `<div class="status-option ${s === item.상태 ? 'current' : ''}" data-value="${escapeHtml(s)}">${escapeHtml(s)}</div>`
+      `<div class="status-option ${s.name === item.상태 ? 'current' : ''}" data-value="${escapeHtml(s.name)}">
+        ${s.color ? `<span class="status-option-dot" style="background:${s.color}"></span>` : ''}${escapeHtml(s.name)}
+      </div>`
     ).join('');
 
     const rect = trigger.getBoundingClientRect();
@@ -211,7 +213,8 @@ async function renderListTab(container, params) {
         item.상태 = newStatus;
         const rowTrigger = container.querySelector(`.status-chip-trigger[data-id="${id}"]`);
         if (rowTrigger) {
-          rowTrigger.className = 'status-chip-trigger ' + statusBadgeClass(newStatus);
+          rowTrigger.className = 'status-chip-trigger ' + statusChipClass(newStatus);
+          rowTrigger.style.cssText = statusChipStyle(newStatus);
           rowTrigger.textContent = newStatus;
         }
       });

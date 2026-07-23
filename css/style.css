@@ -64,8 +64,16 @@ h2 { font-size: 15px; color: var(--text-muted); margin-top: 26px; text-transform
 }
 #tab-nav-links button:hover { color: var(--text); }
 #tab-nav-links button.current { background: none; color: var(--brand); border-bottom-color: var(--brand); }
+#tab-nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+#settings-tab-button {
+  background: #fff; color: var(--text-muted) !important; border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 700; font-size: 13px;
+  transition: border-color .15s, color .15s;
+}
+#settings-tab-button:hover { border-color: var(--brand); color: var(--brand) !important; }
+#settings-tab-button.current { border-color: var(--brand); color: var(--brand) !important; background: var(--brand-tint); }
 #logout-button {
-  margin-left: auto; background: var(--text) !important; color: #fff !important;
+  background: var(--text) !important; color: #fff !important;
   border: none; border-radius: 8px; padding: 8px 18px; cursor: pointer; font-weight: 700; font-size: 13px;
   transition: background .15s;
 }
@@ -94,6 +102,21 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .badge-success { background: var(--success-tint); color: #047857; }
 .badge-danger { background: var(--danger-tint); color: #b91c1c; }
 .badge-neutral { background: var(--neutral-tint); color: var(--text-muted); }
+
+/* Settings tab */
+.settings-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 14px 0 22px; }
+.settings-form input[type="text"], .settings-form input[type="email"], .settings-form select { flex: 1 1 160px; }
+.settings-form input[type="color"] { flex: 0 0 auto; width: 44px; height: 38px; padding: 3px; cursor: pointer; }
+.settings-form button { flex: 0 0 auto; width: auto; padding: 9px 20px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.settings-row-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.settings-row-actions label { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.status-color-input { width: 32px; height: 32px; padding: 2px; cursor: pointer; border-radius: 6px; }
+.btn-outline-small {
+  background: #fff; border: 1.5px solid var(--danger); color: var(--danger);
+  border-radius: 7px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; width: auto;
+}
+.btn-outline-small:hover { background: var(--danger); color: #fff; }
 
 /* Field tab */
 .field-status-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); }
@@ -196,6 +219,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 }
 .status-option:hover { background: var(--brand-tint); }
 .status-option.current { font-weight: 700; color: var(--brand-dark); }
+.status-option-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
 #list-search {
   width: 100%; max-width: 380px; display: block; margin-bottom: 16px;
   border-radius: 50px; padding: 11px 18px; border: 1.5px solid var(--border);
@@ -254,7 +278,8 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
     -webkit-overflow-scrolling: touch;
   }
   #tab-nav-links button { flex: 0 0 auto; white-space: nowrap; height: 40px; }
-  #logout-button { margin-left: 0; flex: 1 1 100%; }
+  #tab-nav-right { margin-left: 0; flex: 1 1 100%; }
+  #settings-tab-button, #logout-button { flex: 1 1 0; }
   main { padding: 16px; }
   .list-table, .list-table thead, .list-table tbody, .list-table th, .list-table td, .list-table tr { display: block; }
   .list-table thead { display: none; }

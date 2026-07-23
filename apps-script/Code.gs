@@ -63,6 +63,8 @@ function doPost(e) {
         return jsonResponse(handleAddStatus_(payload));
       case 'deleteStatus':
         return jsonResponse(handleDeleteStatus_(payload));
+      case 'updateStatusColor':
+        return jsonResponse(handleUpdateStatusColor_(payload));
       default:
         return jsonResponse({ ok: false, error: '알 수 없는 action입니다: ' + action });
     }
