@@ -186,9 +186,17 @@ async function renderListTab(container, params) {
     ).join('');
 
     const rect = trigger.getBoundingClientRect();
-    portal.style.top = `${rect.bottom + 6}px`;
-    portal.style.left = `${rect.left}px`;
+    portal.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    portal.style.left = `${rect.left + window.scrollX}px`;
+    portal.style.maxWidth = `${document.documentElement.clientWidth - 16}px`;
     portal.hidden = false;
+
+    const viewportRight = window.scrollX + document.documentElement.clientWidth - 8;
+    const portalRight = rect.left + window.scrollX + portal.offsetWidth;
+    if (portalRight > viewportRight) {
+      const adjustedLeft = Math.max(window.scrollX + 8, viewportRight - portal.offsetWidth);
+      portal.style.left = `${adjustedLeft}px`;
+    }
 
     portal.querySelectorAll('.status-option').forEach((option) => {
       option.addEventListener('click', async (e) => {

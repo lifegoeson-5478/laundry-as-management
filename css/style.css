@@ -89,12 +89,13 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .field-status-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); }
 .field-save-btn { display: block; margin-top: 8px; }
 .field-row-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.field-row { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); }
 .field-row:last-child { border-bottom: none; }
 .field-row:hover { background: #fafcfb; }
-.field-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.field-row-main strong { font-size: 14px; }
+.field-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
+.field-row-main strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .field-row-sub { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field-row .badge { flex: 0 0 auto; white-space: nowrap; }
 /* Shared app modal (replaces native alert/confirm/field detail popups) */
 .app-modal-overlay {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -140,11 +141,14 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 .status-chip-trigger { border: none; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .status-chip-trigger:hover { filter: brightness(0.95); }
 .status-dropdown {
-  position: fixed; z-index: 2000; min-width: 150px;
+  position: absolute; z-index: 2000; min-width: 170px; width: max-content;
   background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow);
   padding: 4px; max-height: 220px; overflow-y: auto;
 }
-.status-option { padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.status-option {
+  padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70vw;
+}
 .status-option:hover { background: var(--neutral-tint); }
 .status-option.current { font-weight: 700; color: var(--brand-dark); }
 #list-search { width: 100%; max-width: 360px; display: block; margin-bottom: 14px; }
