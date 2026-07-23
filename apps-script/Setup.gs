@@ -33,6 +33,23 @@ function setupSpreadsheet() {
   Logger.log('Setup complete');
 }
 
+// 기존 시트에서 데이터를 옮겨붙인 뒤, id가 비어있는 AS접수 행에 고유 id를 채워준다.
+// Apps Script 편집기에서 이 함수를 한 번 수동 실행하면 된다.
+function fillMissingAsIds() {
+  var sheet = getSheet_('AS접수');
+  var values = sheet.getDataRange().getValues();
+  var headers = values[0];
+  var idCol = headers.indexOf('id');
+  var filled = 0;
+  for (var i = 1; i < values.length; i++) {
+    if (!values[i][idCol]) {
+      sheet.getRange(i + 1, idCol + 1).setValue(Utilities.getUuid());
+      filled++;
+    }
+  }
+  Logger.log('id를 채운 행 수: ' + filled);
+}
+
 function defaultStatusColor_(name) {
   if (name.indexOf('AS 불가') !== -1) return '#e03e3e';
   if (name.indexOf('종결') !== -1) return '#9aa0ad';
