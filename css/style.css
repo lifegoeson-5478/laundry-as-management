@@ -79,7 +79,7 @@ h2 { font-size: 15px; color: var(--text-muted); margin-top: 26px; text-transform
 }
 #logout-button:hover { background: #333 !important; }
 
-main { padding: 24px; max-width: 1360px; margin: 0 auto; }
+main { padding: 24px; max-width: 1280px; margin: 0 auto; }
 
 /* Generic surfaces */
 .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; background: var(--surface); box-shadow: var(--shadow); }
