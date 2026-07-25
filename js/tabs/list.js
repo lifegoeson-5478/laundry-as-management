@@ -7,6 +7,20 @@ const LIST_FILTERS = {
   '택배 접수': (r) => String(r.매장위치 || '').indexOf('택배') !== -1
 };
 
+const LIST_COLUMNS = [
+  { label: '순번', sortable: false },
+  { label: '고객분류', field: '고객분류', sortable: true },
+  { label: '휴대폰번호', field: '회원연락처', sortable: true },
+  { label: '회원카드', field: '회원카드', sortable: true },
+  { label: '바코드번호', field: '바코드번호', sortable: true },
+  { label: '브랜드', field: '브랜드', sortable: true },
+  { label: '품목', field: '품목', sortable: true },
+  { label: '접수일', field: '접수일시', sortable: true },
+  { label: '접수자', field: '접수자', sortable: true },
+  { label: '상태', field: '상태', sortable: true },
+  { label: '', sortable: false }
+];
+
 const LIST_EDIT_FIELDS = [
   ['고객분류', 'text'], ['회원카드', 'text'], ['회원연락처', 'text'],
   ['수거요청일자', 'date'], ['바코드번호', 'text'],
@@ -46,6 +60,8 @@ async function renderListTab(container, params) {
   }
   let currentFilter = '전체';
   let searchText = '';
+  let sortField = null;
+  let sortDirection = 'asc';
 
   let specialFilter = null;
   let specialLabel = '';
@@ -73,6 +89,15 @@ async function renderListTab(container, params) {
       );
     }
 
+    if (sortField) {
+      items = items.slice().sort((a, b) => {
+        const av = String(a[sortField] || '');
+        const bv = String(b[sortField] || '');
+        const cmp = av.localeCompare(bv, 'ko');
+        return sortDirection === 'asc' ? cmp : -cmp;
+      });
+    }
+
     const filterButtons = Object.keys(LIST_FILTERS).map((name) =>
       `<button data-filter="${escapeHtml(name)}" class="list-tab ${name === currentFilter ? 'active' : ''}">${escapeHtml(name)}</button>`
     ).join('');
@@ -91,6 +116,7 @@ async function renderListTab(container, params) {
         <td data-label="휴대폰번호">${escapeHtml(item.회원연락처)}</td>
         <td data-label="회원카드">${escapeHtml(item.회원카드)}</td>
         <td data-label="바코드번호">${escapeHtml(item.바코드번호)}</td>
+        <td data-label="브랜드">${escapeHtml(item.브랜드)}</td>
         <td data-label="품목">${escapeHtml(item.품목)}</td>
         <td data-label="접수일">${escapeHtml(formatDateOnly(item.접수일시))}</td>
         <td data-label="접수자">${escapeHtml(item.접수자)}</td>
@@ -101,21 +127,39 @@ async function renderListTab(container, params) {
       </tr>
     `).join('');
 
+    const headerCells = LIST_COLUMNS.map((col) => {
+      if (!col.sortable) return `<th>${escapeHtml(col.label)}</th>`;
+      const isActive = sortField === col.field;
+      const arrow = isActive ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+      return `<th class="sortable-th ${isActive ? 'sorted' : ''}" data-field="${escapeHtml(col.field)}">${escapeHtml(col.label)}${arrow}</th>`;
+    }).join('');
+
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
       ${specialBanner}
       <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색" value="${escapeHtml(searchText)}">
       <table class="list-table">
         <thead>
-          <tr>
-            <th>순번</th><th>고객분류</th><th>휴대폰번호</th><th>회원카드</th><th>바코드번호</th><th>품목</th><th>접수일</th><th>접수자</th><th>상태</th><th></th>
-          </tr>
+          <tr>${headerCells}</tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="10">표시할 항목이 없습니다.</td></tr>`}
+          ${rows || `<tr><td colspan="${LIST_COLUMNS.length}">표시할 항목이 없습니다.</td></tr>`}
         </tbody>
       </table>
     `;
+
+    container.querySelectorAll('.sortable-th').forEach((th) => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.field;
+        if (sortField === field) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortField = field;
+          sortDirection = 'asc';
+        }
+        draw();
+      });
+    });
 
     const searchInput = document.getElementById('list-search');
     searchInput.focus();

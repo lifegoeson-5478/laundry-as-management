@@ -221,6 +221,9 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
   .list-table td[data-label="접수자"] { white-space: nowrap; }
 }
 .list-table thead th { background: var(--bg); font-weight: 700; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.list-table thead th.sortable-th { cursor: pointer; user-select: none; white-space: nowrap; transition: color .15s; }
+.list-table thead th.sortable-th:hover { color: var(--text); }
+.list-table thead th.sortable-th.sorted { color: var(--brand-dark); }
 .list-table tbody tr { transition: background .1s; }
 .list-table tbody tr:hover { background: #f0fdf9; }
 .staff-table th:last-child, .staff-table td:last-child { text-align: right; }
