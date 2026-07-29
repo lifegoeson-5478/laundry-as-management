@@ -90,13 +90,15 @@ function openFieldModal(id) {
         ${detailRow('손상부위', escapeHtml(item.손상부위))}
         ${detailRow('현재상태', statusBadge(item.상태))}
       </div>
-      <div class="detail-row">
-        <div class="detail-label">진행 상태 선택</div>
-        <div class="field-buttons chip-group">${buttons}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">메모</div>
-        <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
+      <div class="field-action-section">
+        <div class="detail-row">
+          <div class="detail-label">진행 상태 선택</div>
+          <div class="field-buttons chip-group">${buttons}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">메모</div>
+          <textarea class="field-memo" placeholder="메모">${escapeHtml(item.현장메모 || '')}</textarea>
+        </div>
       </div>
       <button type="button" class="btn-primary-block field-save-btn">저장</button>
     </div>
