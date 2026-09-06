@@ -97,6 +97,15 @@ function renderIntakeTab(container) {
     const record = {};
     formData.forEach((value, key) => { record[key] = value; });
 
+    const dupCheck = await callApi('checkDuplicateAS', {
+      회원카드: record.회원카드,
+      바코드번호: record.바코드번호
+    });
+    if (dupCheck.ok && dupCheck.items.length > 0) {
+      const proceed = await showDuplicateConfirm(dupCheck.items);
+      if (!proceed) return;
+    }
+
     const result = await callApi('submitAS', { form: record });
     if (result.ok) {
       await showAlert('접수되었습니다.');
