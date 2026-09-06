@@ -293,8 +293,22 @@ async function renderListTab(container, params) {
       ${detailRow('손상부위', escapeHtml(item.손상부위))}
       ${detailRow('요청건관련메모', escapeHtml(item.요청건관련메모))}
       ${detailRow('현장메모', escapeHtml(item.현장메모 || '(없음)'))}
+      ${detailRow('상태 변경 이력', '<div id="status-history-body">불러오는 중...</div>')}
       <button type="button" class="btn-outline-block" id="list-edit-btn">수정</button>
     `;
+  }
+
+  async function loadStatusHistory_(id) {
+    const result = await callApi('listStatusHistory', { id: id });
+    const el = document.getElementById('status-history-body');
+    if (!el) return;
+    if (!result.ok || !result.items.length) {
+      el.textContent = '이력이 없습니다.';
+      return;
+    }
+    el.innerHTML = result.items.map((h) => `
+      <div class="history-row">${escapeHtml(String(h.변경일시 || '').replace('T', ' ').slice(0, 16))} · ${escapeHtml(h.변경자)}: ${escapeHtml(h.이전상태 || '(없음)')} → ${escapeHtml(h.새상태)}</div>
+    `).join('');
   }
 
   function renderEditBody(item) {
@@ -317,10 +331,12 @@ async function renderListTab(container, params) {
     if (!item) return;
 
     const modal = openDetailModal(`${item.바코드번호} 접수 상세`, renderDetailBody(item));
+    loadStatusHistory_(id);
 
     function showView() {
       modal.querySelector('.modal-body').innerHTML = renderDetailBody(item);
       modal.querySelector('#list-edit-btn').addEventListener('click', showEdit);
+      loadStatusHistory_(id);
     }
 
     function showEdit() {
