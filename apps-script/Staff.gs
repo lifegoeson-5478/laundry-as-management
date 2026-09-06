@@ -1,6 +1,10 @@
 function handleListStaff_(payload) {
   requireAdmin_(payload);
-  return { ok: true, items: getAllRows('직원목록') };
+  var cached = getCache_('listStaff');
+  if (cached) return { ok: true, items: cached };
+  var items = getAllRows('직원목록');
+  setCache_('listStaff', items, 300);
+  return { ok: true, items: items };
 }
 
 function handleAddStaff_(payload) {
@@ -18,6 +22,7 @@ function handleAddStaff_(payload) {
     역할: form.역할 === '관리자' ? '관리자' : '일반',
     활성여부: true
   });
+  clearCache_(['listStaff']);
   return { ok: true };
 }
 
@@ -35,6 +40,7 @@ function handleUpdateStaff_(payload) {
         var col = headers.indexOf(key);
         if (col !== -1) sheet.getRange(i + 1, col + 1).setValue(payload.updates[key]);
       });
+      clearCache_(['listStaff']);
       return { ok: true };
     }
   }
@@ -55,6 +61,7 @@ function handleDeleteStaff_(payload) {
   for (var i = 1; i < values.length; i++) {
     if (values[i][emailCol] === payload.email) {
       sheet.deleteRow(i + 1);
+      clearCache_(['listStaff']);
       return { ok: true };
     }
   }

@@ -40,15 +40,19 @@ function handleSubmitAS_(payload) {
   };
 
   appendRowObject('AS접수', record);
+  clearCache_(['listAS', 'dashboard']);
   return { ok: true, record: record };
 }
 
 function handleListAS_(payload) {
   requireSession_(payload);
+  var cached = getCache_('listAS');
+  if (cached) return { ok: true, items: cached };
   var rows = getAllRows('AS접수');
   rows.sort(function (a, b) {
     return new Date(a.접수일시) - new Date(b.접수일시);
   });
+  setCache_('listAS', rows, 20);
   return { ok: true, items: rows };
 }
 
@@ -68,6 +72,7 @@ function handleUpdateAS_(payload) {
   });
   var updated = updateRowById('AS접수', payload.id, updates);
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  clearCache_(['listAS', 'dashboard']);
   return { ok: true };
 }
 
@@ -76,6 +81,7 @@ function handleDeleteAS_(payload) {
   if (!payload.id) return { ok: false, error: 'id가 필요합니다.' };
   var deleted = deleteRowById('AS접수', payload.id);
   if (!deleted) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  clearCache_(['listAS', 'dashboard']);
   return { ok: true };
 }
 
@@ -86,6 +92,7 @@ function handleUpdateStatus_(payload) {
   }
   var updated = updateRowById('AS접수', payload.id, { 상태: payload.status });
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  clearCache_(['listAS', 'dashboard']);
   return { ok: true };
 }
 
@@ -103,6 +110,7 @@ function handleFieldUpdate_(payload) {
     현장메모: payload.memo || ''
   });
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  clearCache_(['listAS', 'dashboard']);
 
   var item = getAllRows('AS접수').find(function (r) { return r.id === payload.id; });
   var mention = mentionForStaffName_(item ? item.접수자 : '');

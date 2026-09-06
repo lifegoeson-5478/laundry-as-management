@@ -16,14 +16,15 @@ function ensureStatusColorColumns_(sheet) {
 
 function handleListStatus_(payload) {
   requireSession_(payload);
+  var cached = getCache_('listStatus');
+  if (cached) return { ok: true, items: cached };
   var rows = getAllRows('상태값');
   rows.sort(function (a, b) { return a.정렬순서 - b.정렬순서; });
-  return {
-    ok: true,
-    items: rows.map(function (r) {
-      return { name: r.상태명, color: r.색상 || '', textColor: r.글자색 || '' };
-    })
-  };
+  var items = rows.map(function (r) {
+    return { name: r.상태명, color: r.색상 || '', textColor: r.글자색 || '' };
+  });
+  setCache_('listStatus', items, 300);
+  return { ok: true, items: items };
 }
 
 function handleAddStatus_(payload) {
@@ -42,6 +43,7 @@ function handleAddStatus_(payload) {
   }
   var maxOrder = rows.reduce(function (max, r) { return Math.max(max, r.정렬순서 || 0); }, 0);
   appendRowObject('상태값', { 상태명: name, 정렬순서: maxOrder + 1, 색상: color, 글자색: textColor });
+  clearCache_(['listStatus']);
   return { ok: true };
 }
 
@@ -57,6 +59,7 @@ function handleDeleteStatus_(payload) {
   for (var i = 1; i < values.length; i++) {
     if (values[i][nameCol] === name) {
       sheet.deleteRow(i + 1);
+      clearCache_(['listStatus']);
       return { ok: true };
     }
   }
@@ -79,6 +82,7 @@ function handleUpdateStatusColor_(payload) {
     if (values[i][nameCol] === name) {
       sheet.getRange(i + 1, cols.colorCol + 1).setValue(color);
       sheet.getRange(i + 1, cols.textColorCol + 1).setValue(textColor);
+      clearCache_(['listStatus']);
       return { ok: true };
     }
   }

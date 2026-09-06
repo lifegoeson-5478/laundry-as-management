@@ -1,3 +1,20 @@
+function getCache_(key) {
+  var cached = CacheService.getScriptCache().get(key);
+  return cached ? JSON.parse(cached) : null;
+}
+
+function setCache_(key, value, ttlSeconds) {
+  try {
+    CacheService.getScriptCache().put(key, JSON.stringify(value), ttlSeconds);
+  } catch (err) {
+    // 캐시 용량(100KB) 초과 시 그냥 캐싱을 건너뜀
+  }
+}
+
+function clearCache_(keys) {
+  CacheService.getScriptCache().removeAll(keys);
+}
+
 function getSheet_(name) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
   if (!sheet) throw new Error('시트를 찾을 수 없습니다: ' + name);

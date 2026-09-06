@@ -47,7 +47,8 @@ function closeStatusPortal_() {
 }
 
 async function renderListTab(container, params) {
-  container.innerHTML = loadingScreen('접수 목록을 불러오고 있어요');
+  const cachedHtml = sessionStorage.getItem('tabHtml_list');
+  container.innerHTML = cachedHtml || loadingScreen('접수 목록을 불러오고 있어요');
 
   const [listResult, statusOptions] = await Promise.all([
     callApi('listAS', {}),
@@ -211,6 +212,8 @@ async function renderListTab(container, params) {
     container.querySelectorAll('.list-table tbody tr').forEach((row) => {
       row.addEventListener('click', () => openListDetailModal(row.dataset.id));
     });
+
+    sessionStorage.setItem('tabHtml_list', container.innerHTML);
   }
 
   function openStatusPortal(trigger) {

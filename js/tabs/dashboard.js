@@ -28,7 +28,8 @@ function hideStackTooltip_() {
 }
 
 async function renderDashboardTab(container) {
-  container.innerHTML = loadingScreen('대시보드 현황을 불러오고 있어요');
+  const cachedHtml = sessionStorage.getItem('tabHtml_dashboard');
+  container.innerHTML = cachedHtml || loadingScreen('대시보드 현황을 불러오고 있어요');
   const [result] = await Promise.all([callApi('dashboard', {}), getStatusOptions()]);
   if (!result.ok) {
     container.innerHTML = `<div>대시보드를 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
@@ -124,4 +125,6 @@ async function renderDashboardTab(container) {
     segment.addEventListener('mouseenter', () => showStackTooltip_(segment));
     segment.addEventListener('mouseleave', hideStackTooltip_);
   });
+
+  sessionStorage.setItem('tabHtml_dashboard', container.innerHTML);
 }

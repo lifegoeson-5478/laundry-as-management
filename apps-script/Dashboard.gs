@@ -1,5 +1,8 @@
 function handleDashboard_(payload) {
   requireSession_(payload);
+  var cached = getCache_('dashboard');
+  if (cached) return cached;
+
   var rows = getAllRows('AS접수');
   var today = new Date();
 
@@ -42,7 +45,7 @@ function handleDashboard_(payload) {
     statusByCustomerType[type][status] = (statusByCustomerType[type][status] || 0) + 1;
   });
 
-  return {
+  var result = {
     ok: true,
     needIntake: needIntake,
     needPickup: needPickup,
@@ -55,4 +58,6 @@ function handleDashboard_(payload) {
     totalOpen: openRows.length,
     totalClosed: rows.length - openRows.length
   };
+  setCache_('dashboard', result, 20);
+  return result;
 }
