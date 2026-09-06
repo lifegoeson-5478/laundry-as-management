@@ -23,7 +23,8 @@ function renderFieldRow(item) {
 }
 
 async function renderFieldTab(container, params) {
-  container.innerHTML = loadingScreen('현장 처리 목록을 불러오고 있어요');
+  const cachedHtml = sessionStorage.getItem('tabHtml_field');
+  container.innerHTML = cachedHtml || loadingScreen('현장 처리 목록을 불러오고 있어요');
   const [result] = await Promise.all([callApi('listAS', {}), getStatusOptions()]);
   if (!result.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
@@ -69,6 +70,8 @@ async function renderFieldTab(container, params) {
     container.querySelectorAll('.field-row').forEach((row) => {
       row.addEventListener('click', () => openFieldModal(row.dataset.id));
     });
+
+    sessionStorage.setItem('tabHtml_field', container.innerHTML);
   }
 
   draw();
