@@ -266,12 +266,13 @@ button[type="submit"]:hover, .field-save-btn:hover { background: var(--brand-dar
 }
 .special-filter-banner button { background: #fff; border: 1.5px solid var(--brand); color: var(--brand-dark); padding: 5px 12px; border-radius: 8px; }
 .bulk-action-bar {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   background: var(--brand-tint); color: var(--brand-dark); border-radius: 10px;
   padding: 11px 16px; margin-bottom: 14px; font-size: 13px; font-weight: 700;
 }
+.bulk-action-bar span { white-space: nowrap; }
 .bulk-action-bar select { font-weight: 500; }
-.bulk-action-bar #bulk-delete-btn { width: auto; margin: 0; padding: 6px 14px; }
+.bulk-action-bar button.btn-outline-block { width: auto; margin: 0; padding: 6px 14px; white-space: nowrap; }
 .list-table tbody tr { cursor: pointer; }
 .list-table tbody tr.clickable-row:hover { background: var(--brand-tint); }
 .stat-card.clickable { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }

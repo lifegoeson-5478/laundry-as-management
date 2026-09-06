@@ -146,6 +146,7 @@ async function renderListTab(container, params) {
           ${statusOptions.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('')}
         </select>
         <button type="button" class="btn-outline-block" id="bulk-delete-btn">선택 삭제</button>
+        <button type="button" class="btn-outline-block" id="bulk-clear-btn">선택 해제</button>
       </div>
     ` : '';
 
@@ -268,6 +269,14 @@ async function renderListTab(container, params) {
         selectedIds.clear();
         const failCount = results.filter((r) => !r.ok).length;
         if (failCount > 0) await showAlert(`${failCount}건 변경에 실패했습니다.`);
+        draw();
+      });
+    }
+
+    const bulkClearBtn = document.getElementById('bulk-clear-btn');
+    if (bulkClearBtn) {
+      bulkClearBtn.addEventListener('click', () => {
+        selectedIds.clear();
         draw();
       });
     }
