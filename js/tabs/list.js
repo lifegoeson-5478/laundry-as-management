@@ -64,6 +64,7 @@ async function renderListTab(container, params) {
   let searchText = '';
   let sortField = null;
   let sortDirection = 'asc';
+  let selectedIds = new Set();
 
   let specialFilter = null;
   let specialLabel = '';
@@ -113,6 +114,7 @@ async function renderListTab(container, params) {
 
     const rows = items.map((item, index) => `
       <tr data-id="${escapeHtml(item.id)}">
+        <td data-label=""><input type="checkbox" class="row-select-checkbox" data-id="${escapeHtml(item.id)}" ${selectedIds.has(item.id) ? 'checked' : ''}></td>
         <td data-label="순번">${index + 1}</td>
         <td data-label="고객분류">${escapeHtml(item.고객분류)}</td>
         <td data-label="휴대폰번호">${escapeHtml(item.회원연락처)}</td>
@@ -136,16 +138,28 @@ async function renderListTab(container, params) {
       return `<th class="sortable-th ${isActive ? 'sorted' : ''}" data-field="${escapeHtml(col.field)}">${escapeHtml(col.label)}${arrow}</th>`;
     }).join('');
 
+    const bulkBar = selectedIds.size > 0 ? `
+      <div class="bulk-action-bar">
+        <span>${selectedIds.size}건 선택됨</span>
+        <select id="bulk-status-select">
+          <option value="">상태 일괄 변경...</option>
+          ${statusOptions.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('')}
+        </select>
+        <button type="button" class="btn-outline-block" id="bulk-delete-btn">선택 삭제</button>
+      </div>
+    ` : '';
+
     container.innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
       ${specialBanner}
       <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색" value="${escapeHtml(searchText)}">
+      ${bulkBar}
       <table class="list-table">
         <thead>
-          <tr>${headerCells}</tr>
+          <tr><th><input type="checkbox" id="select-all-checkbox"></th>${headerCells}</tr>
         </thead>
         <tbody>
-          ${rows || `<tr><td colspan="${LIST_COLUMNS.length}">표시할 항목이 없습니다.</td></tr>`}
+          ${rows || `<tr><td colspan="${LIST_COLUMNS.length + 1}">표시할 항목이 없습니다.</td></tr>`}
         </tbody>
       </table>
     `;
@@ -213,6 +227,70 @@ async function renderListTab(container, params) {
     container.querySelectorAll('.list-table tbody tr').forEach((row) => {
       row.addEventListener('click', () => openListDetailModal(row.dataset.id));
     });
+
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    selectAllCheckbox.checked = items.length > 0 && items.every((item) => selectedIds.has(item.id));
+    selectAllCheckbox.addEventListener('click', (e) => e.stopPropagation());
+    selectAllCheckbox.addEventListener('change', () => {
+      items.forEach((item) => {
+        if (selectAllCheckbox.checked) selectedIds.add(item.id);
+        else selectedIds.delete(item.id);
+      });
+      draw();
+    });
+
+    container.querySelectorAll('.row-select-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('click', (e) => e.stopPropagation());
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) selectedIds.add(checkbox.dataset.id);
+        else selectedIds.delete(checkbox.dataset.id);
+        draw();
+      });
+    });
+
+    const bulkStatusSelect = document.getElementById('bulk-status-select');
+    if (bulkStatusSelect) {
+      bulkStatusSelect.addEventListener('change', async () => {
+        const newStatus = bulkStatusSelect.value;
+        if (!newStatus) return;
+        if (!(await showConfirm(`선택한 ${selectedIds.size}건의 상태를 "${newStatus}"로 변경할까요?`))) {
+          bulkStatusSelect.value = '';
+          return;
+        }
+        const ids = Array.from(selectedIds);
+        const results = await Promise.all(ids.map((id) => callApi('updateStatus', { id: id, status: newStatus })));
+        ids.forEach((id, i) => {
+          if (results[i].ok) {
+            const item = listResult.items.find((r) => r.id === id);
+            if (item) item.상태 = newStatus;
+          }
+        });
+        selectedIds.clear();
+        const failCount = results.filter((r) => !r.ok).length;
+        if (failCount > 0) await showAlert(`${failCount}건 변경에 실패했습니다.`);
+        draw();
+      });
+    }
+
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.addEventListener('click', async () => {
+        if (!(await showConfirm(`선택한 ${selectedIds.size}건을 삭제할까요?`))) return;
+        const ids = Array.from(selectedIds);
+        const results = await Promise.all(ids.map((id) => callApi('deleteAS', { id: id })));
+        const failedIds = new Set();
+        ids.forEach((id, i) => {
+          if (results[i].ok) {
+            listResult.items = listResult.items.filter((item) => item.id !== id);
+          } else {
+            failedIds.add(id);
+          }
+        });
+        selectedIds = failedIds;
+        if (failedIds.size > 0) await showAlert(`${failedIds.size}건 삭제에 실패했습니다.`);
+        draw();
+      });
+    }
 
     sessionStorage.setItem('tabHtml_list', container.innerHTML);
   }
