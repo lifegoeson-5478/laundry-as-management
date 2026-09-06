@@ -1,4 +1,6 @@
-# 세탁 브랜드 AS 관리 페이지 Implementation Plan
+﻿# 세탁 브랜드 AS 관리 페이지 Implementation Plan
+
+> **상태 (2026-09-06 기준): Task 1~15 전체 구현 완료.** 아래 체크박스는 모두 완료 처리했고, 최초 계획 이후 추가된 기능은 문서 맨 아래 **"Task 15 이후 추가 구현"** 절에 정리했다. 이 문서는 더 이상 실행 대상 계획이 아니라 구현 이력 기록이다.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -33,9 +35,11 @@ AS 관리 페이지/
     AS.gs                   # submitAS/listAS/updateStatus/fieldUpdate
     Dashboard.gs             # dashboard 액션 (집계)
     Staff.gs                 # listStaff/addStaff/updateStaff
-    Status.gs                # listStatus/addStatus/deleteStatus
+    Status.gs                # listStatus/addStatus/deleteStatus/updateStatusColor
     Logic.gs                 # 순수 함수 (경과기간 버킷, 현장상태 매핑, 행<->객체 변환) — Node에서도 그대로 로드해 테스트
     Setup.gs                 # 시트/헤더/초기 상태값 생성용 1회성 스크립트
+    Cleanup.gs               # 접수 6개월 경과 건 자동 삭제 (일 1회 트리거)
+    Slack.gs                 # Slack 알림 발송 헬퍼
   test/
     logic.test.js            # Logic.gs의 순수 함수에 대한 Node 테스트 (vm 모듈로 Logic.gs를 그대로 로드)
   index.html                 # 앱 셸 + 탭 네비게이션
@@ -45,10 +49,11 @@ AS 관리 페이지/
     api.js                   # 백엔드 fetch 래퍼
     auth.js                  # GIS 로그인, 세션 localStorage 관리
     render.js                # escapeHtml 등 공용 DOM 헬퍼
+    notify.js                # 브라우저 알림/토스트 헬퍼
     tabs/
       dashboard.js
       intake.js
-      list.js
+      list.js                # 필터/정렬/상태변경 + 다건 선택 일괄 상태변경·삭제
       field.js
       settings.js
     app.js                   # 탭 전환, 초기화 진입점
@@ -66,20 +71,20 @@ AS 관리 페이지/
 **Interfaces:**
 - Produces: `AS접수`, `직원목록`, `상태값` 시트가 올바른 헤더로 존재한다는 전제. 이후 모든 태스크가 이 헤더 순서에 의존.
 
-- [ ] **Step 1: git 저장소 초기화**
+- [x] **Step 1: git 저장소 초기화**
 
 ```bash
 git init
 ```
 
-- [ ] **Step 2: `.gitignore` 작성**
+- [x] **Step 2: `.gitignore` 작성**
 
 ```
 .clasp.json
 node_modules/
 ```
 
-- [ ] **Step 3: `apps-script/appsscript.json` 작성**
+- [x] **Step 3: `apps-script/appsscript.json` 작성**
 
 ```json
 {
@@ -94,7 +99,7 @@ node_modules/
 }
 ```
 
-- [ ] **Step 4: `apps-script/Setup.gs` 작성**
+- [x] **Step 4: `apps-script/Setup.gs` 작성**
 
 ```javascript
 // Apps Script 편집기에서 이 함수를 한 번 수동 실행해 시트/헤더/초기 상태값을 만든다.
@@ -144,7 +149,7 @@ function createSheetIfMissing_(ss, name, headers) {
 }
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps-script/appsscript.json apps-script/Setup.gs .gitignore
@@ -169,7 +174,7 @@ git commit -m "chore: project scaffold + sheet setup script"
   - `objectToRow(headers, obj)` → `array`
 - Consumes: 없음 (순수 함수, 외부 의존성 없음)
 
-- [ ] **Step 1: `test/logic.test.js` 작성 (실패하는 테스트부터)**
+- [x] **Step 1: `test/logic.test.js` 작성 (실패하는 테스트부터)**
 
 ```javascript
 const assert = require('node:assert');
@@ -224,12 +229,12 @@ test('rowToObject / objectToRow 왕복 변환', () => {
 });
 ```
 
-- [ ] **Step 2: 테스트 실행해서 실패 확인 (Logic.gs가 없으므로 실패)**
+- [x] **Step 2: 테스트 실행해서 실패 확인 (Logic.gs가 없으므로 실패)**
 
 Run: `node --test test/logic.test.js`
 Expected: FAIL (ENOENT: `apps-script/Logic.gs` 없음)
 
-- [ ] **Step 3: `apps-script/Logic.gs` 구현**
+- [x] **Step 3: `apps-script/Logic.gs` 구현**
 
 ```javascript
 // 순수 함수만 포함. SpreadsheetApp 등 Apps Script 전용 API를 사용하지 않는다.
@@ -270,12 +275,12 @@ function objectToRow(headers, obj) {
 }
 ```
 
-- [ ] **Step 4: 테스트 재실행해서 통과 확인**
+- [x] **Step 4: 테스트 재실행해서 통과 확인**
 
 Run: `node --test test/logic.test.js`
 Expected: PASS (5개 테스트 모두 통과)
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add apps-script/Logic.gs test/logic.test.js
@@ -302,7 +307,7 @@ git commit -m "feat: pure logic functions with node tests"
   - `jsonResponse(obj)` → `ContentService.TextOutput`
   - action 라우팅: `doPost(e)` 가 모든 액션의 진입점
 
-- [ ] **Step 1: `apps-script/Sheets.gs` 작성**
+- [x] **Step 1: `apps-script/Sheets.gs` 작성**
 
 ```javascript
 function getSheet_(name) {
@@ -351,7 +356,7 @@ function updateRowById(sheetName, id, updates) {
 }
 ```
 
-- [ ] **Step 2: `apps-script/Auth.gs` 작성**
+- [x] **Step 2: `apps-script/Auth.gs` 작성**
 
 ```javascript
 function getSessionSecret_() {
@@ -423,7 +428,7 @@ function handleLogin_(payload) {
 }
 ```
 
-- [ ] **Step 3: `apps-script/Code.gs` 작성 (디스패처)**
+- [x] **Step 3: `apps-script/Code.gs` 작성 (디스패처)**
 
 ```javascript
 function jsonResponse(obj) {
@@ -468,7 +473,7 @@ function doPost(e) {
 }
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps-script/Sheets.gs apps-script/Auth.gs apps-script/Code.gs
@@ -489,7 +494,7 @@ git commit -m "feat: apps script core - sheet CRUD, session auth, login action"
 - Consumes: `requireSession_`, `getAllRows`, `appendRowObject` (Task 3), `getAllRows('상태값')`
 - Produces: `handleSubmitAS_(payload)`, `handleListAS_(payload)`
 
-- [ ] **Step 1: `apps-script/AS.gs` 작성**
+- [x] **Step 1: `apps-script/AS.gs` 작성**
 
 ```javascript
 var AS_REQUIRED_FIELDS = [
@@ -547,7 +552,7 @@ function handleListAS_(payload) {
 }
 ```
 
-- [ ] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
+- [x] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
 
 ```javascript
       case 'login':
@@ -559,7 +564,7 @@ function handleListAS_(payload) {
       default:
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps-script/AS.gs apps-script/Code.gs
@@ -580,7 +585,7 @@ git commit -m "feat: submitAS and listAS actions"
 - Consumes: `FIELD_STATUS_MAP` (Task 2, `Logic.gs`), `updateRowById` (Task 3)
 - Produces: `handleUpdateStatus_(payload)`, `handleFieldUpdate_(payload)`
 
-- [ ] **Step 1: `apps-script/AS.gs`에 함수 추가**
+- [x] **Step 1: `apps-script/AS.gs`에 함수 추가**
 
 ```javascript
 function handleUpdateStatus_(payload) {
@@ -611,7 +616,7 @@ function handleFieldUpdate_(payload) {
 }
 ```
 
-- [ ] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
+- [x] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
 
 ```javascript
       case 'updateStatus':
@@ -621,7 +626,7 @@ function handleFieldUpdate_(payload) {
       default:
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps-script/AS.gs apps-script/Code.gs
@@ -640,7 +645,7 @@ git commit -m "feat: updateStatus and fieldUpdate actions"
 - Consumes: `computeAgingBucket` (Task 2), `getAllRows` (Task 3)
 - Produces: `handleDashboard_(payload)` → `{ok, needIntake, needPickup, agingBuckets, byStaff}`
 
-- [ ] **Step 1: `apps-script/Dashboard.gs` 작성**
+- [x] **Step 1: `apps-script/Dashboard.gs` 작성**
 
 ```javascript
 function handleDashboard_(payload) {
@@ -677,7 +682,7 @@ function handleDashboard_(payload) {
 }
 ```
 
-- [ ] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
+- [x] **Step 2: `apps-script/Code.gs`의 `switch`에 케이스 추가**
 
 ```javascript
       case 'dashboard':
@@ -685,7 +690,7 @@ function handleDashboard_(payload) {
       default:
 ```
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add apps-script/Dashboard.gs apps-script/Code.gs
@@ -705,7 +710,7 @@ git commit -m "feat: dashboard aggregation action"
 - Consumes: `requireAdmin_` (Task 3), `getAllRows`, `appendRowObject`, `updateRowById` (Task 3)
 - Produces: `handleListStaff_`, `handleAddStaff_`, `handleUpdateStaff_`, `handleListStatus_`, `handleAddStatus_`, `handleDeleteStatus_`
 
-- [ ] **Step 1: `apps-script/Staff.gs` 작성**
+- [x] **Step 1: `apps-script/Staff.gs` 작성**
 
 ```javascript
 function handleListStaff_(payload) {
@@ -752,7 +757,7 @@ function handleUpdateStaff_(payload) {
 }
 ```
 
-- [ ] **Step 2: `apps-script/Status.gs` 작성**
+- [x] **Step 2: `apps-script/Status.gs` 작성**
 
 ```javascript
 function handleListStatus_(payload) {
@@ -795,7 +800,7 @@ function handleDeleteStatus_(payload) {
 }
 ```
 
-- [ ] **Step 3: `apps-script/Code.gs`의 `switch`에 케이스 추가**
+- [x] **Step 3: `apps-script/Code.gs`의 `switch`에 케이스 추가**
 
 ```javascript
       case 'listStaff':
@@ -813,7 +818,7 @@ function handleDeleteStatus_(payload) {
       default:
 ```
 
-- [ ] **Step 4: 커밋**
+- [x] **Step 4: 커밋**
 
 ```bash
 git add apps-script/Staff.gs apps-script/Status.gs apps-script/Code.gs
@@ -826,12 +831,12 @@ git commit -m "feat: staff and status admin actions"
 
 **Files:** 없음 (Google 설정 작업)
 
-- [ ] **Step 1:** Google Sheets 새 파일 생성 → 확장 프로그램 > Apps Script 열기
-- [ ] **Step 2:** Task 1~7에서 만든 모든 `.gs` 파일 내용을 각각 같은 이름의 파일로 편집기에 생성/붙여넣기, `appsscript.json`은 편집기의 프로젝트 설정에서 매니페스트 보기를 켠 뒤 반영
-- [ ] **Step 3:** `setupSpreadsheet` 함수 실행 (Task 1 수동 확인과 동일)
-- [ ] **Step 4:** 배포 > 새 배포 > 유형: 웹앱, 실행 계정: 나, 액세스 권한: 전체 공개(익명 포함) 선택 후 배포, 웹앱 URL 확보
-- [ ] **Step 5:** `직원목록` 시트에 최소 1명(본인)을 관리자로 수동 입력 (이메일, 이름, 역할=관리자, 활성여부=true) — 최초 관리자 부트스트랩용
-- [ ] **Step 6:** curl로 login 액션 스모크 테스트 (실제 ID 토큰 없이 실패 응답 형식만 확인)
+- [x] **Step 1:** Google Sheets 새 파일 생성 → 확장 프로그램 > Apps Script 열기
+- [x] **Step 2:** Task 1~7에서 만든 모든 `.gs` 파일 내용을 각각 같은 이름의 파일로 편집기에 생성/붙여넣기, `appsscript.json`은 편집기의 프로젝트 설정에서 매니페스트 보기를 켠 뒤 반영
+- [x] **Step 3:** `setupSpreadsheet` 함수 실행 (Task 1 수동 확인과 동일)
+- [x] **Step 4:** 배포 > 새 배포 > 유형: 웹앱, 실행 계정: 나, 액세스 권한: 전체 공개(익명 포함) 선택 후 배포, 웹앱 URL 확보
+- [x] **Step 5:** `직원목록` 시트에 최소 1명(본인)을 관리자로 수동 입력 (이메일, 이름, 역할=관리자, 활성여부=true) — 최초 관리자 부트스트랩용
+- [x] **Step 6:** curl로 login 액션 스모크 테스트 (실제 ID 토큰 없이 실패 응답 형식만 확인)
 
 ```bash
 curl -X POST "<웹앱 URL>" -H "Content-Type: application/json" -d "{\"action\":\"login\",\"payload\":{\"idToken\":\"invalid\"}}"
@@ -839,7 +844,7 @@ curl -X POST "<웹앱 URL>" -H "Content-Type: application/json" -d "{\"action\":
 
 Expected: `{"ok":false,"error":"구글 로그인 검증에 실패했습니다."}`
 
-- [ ] **Step 7:** 웹앱 URL을 이후 Task 9의 `js/config.js`에 붙여넣을 수 있도록 기록해둔다
+- [x] **Step 7:** 웹앱 URL을 이후 Task 9의 `js/config.js`에 붙여넣을 수 있도록 기록해둔다
 
 ---
 
@@ -861,14 +866,14 @@ Expected: `{"ok":false,"error":"구글 로그인 검증에 실패했습니다."}
   - `getSession()` → `{email,name,role,token} | null`, `setSession(session)`, `clearSession()`, `initGoogleLogin(onSuccess)` (`auth.js`)
   - `escapeHtml(str)` → `string` (`render.js`)
 
-- [ ] **Step 1: `js/config.js` 작성 (플레이스홀더는 Task 8 배포 후 실제 값으로 교체)**
+- [x] **Step 1: `js/config.js` 작성 (플레이스홀더는 Task 8 배포 후 실제 값으로 교체)**
 
 ```javascript
 const API_URL = 'REPLACE_WITH_APPS_SCRIPT_WEB_APP_URL';
 const GOOGLE_CLIENT_ID = 'REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID';
 ```
 
-- [ ] **Step 2: `js/render.js` 작성**
+- [x] **Step 2: `js/render.js` 작성**
 
 ```javascript
 function escapeHtml(str) {
@@ -882,7 +887,7 @@ function escapeHtml(str) {
 }
 ```
 
-- [ ] **Step 3: `js/api.js` 작성**
+- [x] **Step 3: `js/api.js` 작성**
 
 ```javascript
 async function callApi(action, payload) {
@@ -904,7 +909,7 @@ async function callApi(action, payload) {
 }
 ```
 
-- [ ] **Step 4: `js/auth.js` 작성**
+- [x] **Step 4: `js/auth.js` 작성**
 
 ```javascript
 const SESSION_KEY = 'as_session';
@@ -953,7 +958,7 @@ function initGoogleLogin(onSuccess) {
 }
 ```
 
-- [ ] **Step 5: `index.html` 작성 (탭 셸만, 각 탭 상세는 이후 태스크)**
+- [x] **Step 5: `index.html` 작성 (탭 셸만, 각 탭 상세는 이후 태스크)**
 
 ```html
 <!DOCTYPE html>
@@ -998,7 +1003,7 @@ function initGoogleLogin(onSuccess) {
 </html>
 ```
 
-- [ ] **Step 6: `js/app.js` 작성**
+- [x] **Step 6: `js/app.js` 작성**
 
 ```javascript
 const TAB_RENDERERS = {
@@ -1040,7 +1045,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-- [ ] **Step 7: `css/style.css` 최소 스타일 작성**
+- [x] **Step 7: `css/style.css` 최소 스타일 작성**
 
 ```css
 body { font-family: -apple-system, sans-serif; margin: 0; }
@@ -1062,11 +1067,11 @@ function renderDashboardTab(container) { container.textContent = '준비 중'; }
 ```
 (각 파일에 해당 함수 이름만 맞춰 동일한 임시 구현을 넣는다 — Task 10~14에서 실제 구현으로 교체)
 
-- [ ] **Step 8: 브라우저에서 수동 확인**
+- [x] **Step 8: 브라우저에서 수동 확인**
 
 로컬에서 정적 서버로 열기 (예: VSCode Live Server 또는 `npx serve`), 로그인 화면이 뜨고 탭 버튼 클릭 시 "준비 중"이 표시되는지 확인. (`config.js`의 플레이스홀더 값 때문에 실제 로그인은 Task 8 배포 완료 후에만 동작)
 
-- [ ] **Step 9: 커밋**
+- [x] **Step 9: 커밋**
 
 ```bash
 git add js/ index.html css/style.css
@@ -1084,7 +1089,7 @@ git commit -m "feat: frontend shell, auth, api wrapper, tab navigation"
 - Consumes: `callApi` (Task 9), `escapeHtml` (Task 9)
 - Produces: `renderIntakeTab(container)`
 
-- [ ] **Step 1: `js/tabs/intake.js` 작성**
+- [x] **Step 1: `js/tabs/intake.js` 작성**
 
 ```javascript
 const INTAKE_FIELDS = [
@@ -1159,11 +1164,11 @@ function renderIntakeTab(container) {
 }
 ```
 
-- [ ] **Step 2: 브라우저 수동 확인**
+- [x] **Step 2: 브라우저 수동 확인**
 
 Task 8 배포와 `js/config.js` 실제 값 반영 후: 접수 탭에서 필수값을 채우고 제출 → "접수되었습니다." 알림 확인 → Google Sheets의 `AS접수` 시트에 새 행이 추가됐는지 확인. 필수값을 비우고 제출 시 서버가 `ok:false`와 누락 필드 메시지를 반환하는지 확인.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add js/tabs/intake.js
@@ -1180,7 +1185,7 @@ git commit -m "feat: intake tab form"
 **Interfaces:**
 - Consumes: `callApi`, `escapeHtml` (Task 9), `handleListStatus_` 결과(상태값 드롭다운 구성용)
 
-- [ ] **Step 1: `js/tabs/list.js` 작성**
+- [x] **Step 1: `js/tabs/list.js` 작성**
 
 ```javascript
 const LIST_FILTERS = {
@@ -1254,11 +1259,11 @@ async function renderListTab(container) {
 }
 ```
 
-- [ ] **Step 2: 브라우저 수동 확인**
+- [x] **Step 2: 브라우저 수동 확인**
 
 목록 탭에서 필터 버튼 클릭 시 항목이 걸러지는지, 상태 드롭다운 변경 시 시트의 `상태` 컬럼이 바뀌는지 확인.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add js/tabs/list.js
@@ -1275,7 +1280,7 @@ git commit -m "feat: list tab with filters and status update"
 **Interfaces:**
 - Consumes: `callApi('dashboard', {})` → `{ok, needIntake, needPickup, agingBuckets, byStaff}` (Task 6)
 
-- [ ] **Step 1: `js/tabs/dashboard.js` 작성**
+- [x] **Step 1: `js/tabs/dashboard.js` 작성**
 
 ```javascript
 async function renderDashboardTab(container) {
@@ -1308,11 +1313,11 @@ async function renderDashboardTab(container) {
 }
 ```
 
-- [ ] **Step 2: 브라우저 수동 확인**
+- [x] **Step 2: 브라우저 수동 확인**
 
 대시보드 탭 진입 시 숫자가 시트 데이터와 일치하는지 확인 (예: 상태='접수 필요'인 행 수와 카드 숫자 비교).
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add js/tabs/dashboard.js
@@ -1329,7 +1334,7 @@ git commit -m "feat: dashboard tab"
 **Interfaces:**
 - Consumes: `callApi('listAS')`, `callApi('fieldUpdate', {id, fieldStatus, memo})` (Task 5)
 
-- [ ] **Step 1: `js/tabs/field.js` 작성**
+- [x] **Step 1: `js/tabs/field.js` 작성**
 
 ```javascript
 const FIELD_STATUS_BUTTONS = ['AS불가', '진행중', '수거완료'];
@@ -1382,11 +1387,11 @@ async function renderFieldTab(container) {
 }
 ```
 
-- [ ] **Step 2: 브라우저 수동 확인 (모바일 화면 크기 포함)**
+- [x] **Step 2: 브라우저 수동 확인 (모바일 화면 크기 포함)**
 
 브라우저 개발자 도구로 모바일 화면 크기로 전환해서 카드/버튼이 한 화면에 잘 보이는지 확인. "수거완료" 버튼 클릭 후 목록 탭에서 해당 건 상태가 "회수 완료"로 바뀌었는지, 메모가 저장됐는지 확인.
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add js/tabs/field.js
@@ -1403,7 +1408,7 @@ git commit -m "feat: field tab for on-site staff"
 **Interfaces:**
 - Consumes: `callApi('listStaff')`, `callApi('addStaff')`, `callApi('updateStaff')`, `callApi('listStatus')`, `callApi('addStatus')`, `callApi('deleteStatus')` (Task 7)
 
-- [ ] **Step 1: `js/tabs/settings.js` 작성**
+- [x] **Step 1: `js/tabs/settings.js` 작성**
 
 ```javascript
 async function renderSettingsTab(container) {
@@ -1486,11 +1491,11 @@ async function renderSettingsTab(container) {
 }
 ```
 
-- [ ] **Step 2: 브라우저 수동 확인**
+- [x] **Step 2: 브라우저 수동 확인**
 
 관리자 계정으로 로그인 시에만 설정 탭이 보이는지, 일반 계정으로는 탭 버튼 자체가 숨겨지는지 확인. 직원 추가/비활성화, 상태값 추가/삭제가 실제로 시트에 반영되는지 확인. 일반 계정 세션 토큰으로 `addStaff`를 직접 curl 호출했을 때 서버가 `ok:false`(관리자 아님)로 거부하는지 확인 (프론트 숨김 우회 방어 확인).
 
-- [ ] **Step 3: 커밋**
+- [x] **Step 3: 커밋**
 
 ```bash
 git add js/tabs/settings.js
@@ -1506,7 +1511,7 @@ git commit -m "feat: settings tab for staff and status management"
 
 **Interfaces:** 없음 (배포/검증 작업)
 
-- [ ] **Step 1: `README.md` 작성 (배포 및 설정 방법 기록)**
+- [x] **Step 1: `README.md` 작성 (배포 및 설정 방법 기록)**
 
 ```markdown
 # 브랜드 AS 관리 페이지
@@ -1521,7 +1526,7 @@ git commit -m "feat: settings tab for staff and status management"
 7. GitHub 저장소에 push 후 Settings > Pages에서 배포한다.
 ```
 
-- [ ] **Step 2: 전체 시나리오 수동 테스트**
+- [x] **Step 2: 전체 시나리오 수동 테스트**
 
 1. 관리자 계정으로 로그인 → 대시보드/접수/목록/현장/설정 5개 탭 모두 보이는지 확인
 2. 접수 탭에서 런드리고/런드리24 각각 1건씩 접수 (런드리고 선택 시 배송완료처리 필드 노출 확인)
@@ -1531,7 +1536,7 @@ git commit -m "feat: settings tab for staff and status management"
 6. 설정 탭에서 일반 직원 1명 추가 → 그 계정으로 로그인해서 설정 탭이 안 보이는지 확인
 7. 화이트리스트에 없는 구글 계정으로 로그인 시도 → 거부 메시지 확인
 
-- [ ] **Step 3: 커밋 및 GitHub push**
+- [x] **Step 3: 커밋 및 GitHub push**
 
 ```bash
 git add README.md
@@ -1547,3 +1552,22 @@ git push -u origin main
 - **스펙 커버리지**: 로그인(화이트리스트+역할), 접수 폼(런드리고 조건부 필드), 목록(필터+상태변경), 대시보드(집계 3종), 현장 탭(3단계 매핑+메모), 설정 탭(직원관리+상태값관리, 관리자 전용) 모두 태스크로 매핑됨. 요청건관련메모/구매정보 삭제 반영됨.
 - **플레이스홀더 점검**: `config.js`의 `API_URL`/`GOOGLE_CLIENT_ID`만 배포 시점에 채워야 하는 값으로 남겨둠 (설계상 필연적인 배포 후 설정값이며, Task 8/15에서 채우는 절차를 명시함 — TBD성 플레이스홀더 아님).
 - **타입/이름 일관성**: `FIELD_STATUS_MAP`, `computeAgingBucket`, `rowToObject`/`objectToRow`, `requireSession_`/`requireAdmin_`, action 이름(`login`/`submitAS`/`listAS`/`updateStatus`/`fieldUpdate`/`dashboard`/`listStaff`/`addStaff`/`updateStaff`/`listStatus`/`addStatus`/`deleteStatus`) 모두 스펙 문서(6절) 및 태스크 전체에서 동일하게 사용됨.
+
+---
+
+## Task 15 이후 추가 구현 (계획 시점에는 없던 기능)
+
+배포 이후 실사용 피드백을 반영해 아래 기능들이 추가됐다. 별도 태스크 문서 없이 커밋 단위로 진행됐으므로, 여기서는 무엇이 추가됐는지와 관련 파일만 기록한다.
+
+- **AS 건 수정/삭제**: `updateAS`, `deleteAS` action 추가 (`apps-script/AS.gs`, `Code.gs`). 접수 후 오탈자 정정이나 오접수 삭제가 필요했던 문제 해결.
+- **중복 접수 경고**: `checkDuplicateAS` action — 동일 회원카드 + 바코드번호 조합이 이미 있으면 접수 전 경고. (`apps-script/AS.gs`, `js/tabs/intake.js`)
+- **상태 변경 이력**: `listStatusHistory` action + AS 상세 모달에서 상태 변경 히스토리 표시. (`apps-script/AS.gs`, `js/tabs/list.js`)
+- **목록 탭 다건 선택 일괄 처리**: 체크박스로 여러 건을 선택해 일괄 상태변경/일괄 삭제, 선택 해제 버튼. 서버는 기존 `updateStatus`/`deleteAS`를 건별로 반복 호출하는 방식이라 별도 action 없음. (`js/tabs/list.js`, `css/style.css`)
+- **직원 삭제**: `deleteStaff` action 추가 (`apps-script/Staff.gs`). 기존에는 활성여부 토글만 가능했음.
+- **상태값 색상 지정**: `updateStatusColor` action — 설정 탭에서 상태값별 색상을 지정해 목록/현장 탭 카드에 반영. (`apps-script/Status.gs`, `js/tabs/settings.js`)
+- **탭 전환 시 stale 응답 방지**: 탭을 빠르게 전환할 때 이전 탭의 fetch 응답이 늦게 도착해 화면을 덮어쓰는 버그 수정. (`js/app.js` 또는 각 탭의 요청 토큰/취소 로직)
+- **Slack 알림**: 신규 접수/상태 변경 시 Slack 채널로 알림 발송. `SLACK_BOT_TOKEN`/`SLACK_CHANNEL_ID`를 스크립트 속성에 설정해야 동작. (`apps-script/Slack.gs`)
+- **오래된 건 자동 정리**: 접수일시 기준 6개월 경과 건을 매일 자동 삭제하는 트리거. (`apps-script/Cleanup.gs`, `createDailyCleanupTrigger` 1회 수동 실행 필요)
+- **브라우저 알림/토스트**: 작업 결과를 `alert()` 대신 토스트로 표시. (`js/notify.js`)
+
+**현재 action 목록 (`apps-script/Code.gs` 기준):** `login`, `submitAS`, `checkDuplicateAS`, `listAS`, `updateAS`, `deleteAS`, `updateStatus`, `fieldUpdate`, `listStatusHistory`, `dashboard`, `listStaff`, `addStaff`, `updateStaff`, `deleteStaff`, `listStatus`, `addStatus`, `deleteStatus`, `updateStatusColor`
