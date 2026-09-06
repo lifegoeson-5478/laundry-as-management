@@ -6,10 +6,13 @@ const TAB_RENDERERS = {
   settings: renderSettingsTab
 };
 
+let activeTab = null;
+
 function showTab(tabName, params) {
   document.querySelectorAll('#tab-nav button[data-tab]').forEach((btn) => {
     btn.classList.toggle('current', btn.dataset.tab === tabName);
   });
+  activeTab = tabName;
   document.getElementById('tab-content').innerHTML = '';
   TAB_RENDERERS[tabName](document.getElementById('tab-content'), params);
 }

@@ -31,6 +31,7 @@ async function renderDashboardTab(container) {
   const cachedHtml = sessionStorage.getItem('tabHtml_dashboard');
   container.innerHTML = cachedHtml || loadingScreen('대시보드 현황을 불러오고 있어요');
   const [result] = await Promise.all([callApi('dashboard', {}), getStatusOptions()]);
+  if (activeTab !== 'dashboard') return;
   if (!result.ok) {
     container.innerHTML = `<div>대시보드를 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
     return;

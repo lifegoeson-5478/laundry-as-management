@@ -55,6 +55,7 @@ async function renderListTab(container, params) {
     getStatusOptions()
   ]);
 
+  if (activeTab !== 'list') return;
   if (!listResult.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(listResult.error)}</div>`;
     return;

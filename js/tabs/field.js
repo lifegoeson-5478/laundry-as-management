@@ -26,6 +26,7 @@ async function renderFieldTab(container, params) {
   const cachedHtml = sessionStorage.getItem('tabHtml_field');
   container.innerHTML = cachedHtml || loadingScreen('현장 처리 목록을 불러오고 있어요');
   const [result] = await Promise.all([callApi('listAS', {}), getStatusOptions()]);
+  if (activeTab !== 'field') return;
   if (!result.ok) {
     container.innerHTML = `<div>목록을 불러오지 못했습니다: ${escapeHtml(result.error)}</div>`;
     return;
