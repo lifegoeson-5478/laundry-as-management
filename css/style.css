@@ -77,7 +77,10 @@ h2 {
 #brand-badge {
   width: 24px; height: 24px; border-radius: 6px; background: var(--text); color: #fff;
   display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800;
+  position: relative; padding-right: 3px;
 }
+/* 파비콘과 같은 초록 점 */
+#brand-badge::after { content: ''; position: absolute; right: 2.5px; top: 13.5px; width: 3.5px; height: 3.5px; border-radius: 50%; background: var(--brand); }
 #tab-nav-links { display: flex; height: 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 #tab-nav-links button {
   position: relative; padding: 0 18px; height: 100%; border: none; background: none; border-radius: 0; cursor: pointer;
@@ -94,7 +97,7 @@ h2 {
 #tab-nav-right { margin-left: auto; display: flex; align-items: center; gap: 4px; }
 #settings-tab-button, #logout-button {
   border: none; background: none; color: var(--text-muted); border-radius: 8px;
-  padding: 7px 12px; font-size: 13px; font-weight: 500;
+  padding: 7px 12px; font-size: 13px; font-weight: 500; white-space: nowrap;
 }
 #settings-tab-button:hover, #logout-button:hover { background: var(--bg); color: var(--text); }
 #settings-tab-button.current { color: var(--text); font-weight: 700; background: var(--bg); }
@@ -142,24 +145,36 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .badge-danger { background: var(--danger-tint); color: #b91c1c; }
 .badge-neutral { background: var(--neutral-tint); color: var(--text-muted); }
 
-/* Settings tab */
-.settings-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 18px 0 22px; padding-top: 18px; border-top: 1px solid var(--border); }
-.settings-form input[type="text"], .settings-form input[type="email"], .settings-form select { flex: 1 1 160px; }
-.settings-form input[type="color"] { flex: 0 0 auto; width: 44px; height: 38px; padding: 3px; cursor: pointer; }
-.settings-form button { flex: 0 0 auto; width: auto; padding: 10px 22px; }
-#staff-list, #status-list { border-top: 1px solid var(--text); }
-#staff-list .card, #status-list .card { border: none; border-bottom: 1px solid var(--line); border-radius: 0; background: none; margin: 0; padding: 14px 4px; }
-.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.settings-row-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.settings-row-actions label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
-.status-color-input, .status-text-color-input { width: 32px; height: 32px; padding: 2px; cursor: pointer; border-radius: 6px; }
-.settings-color-label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-faint); font-weight: 600; }
-.settings-color-label input[type="color"] { width: 36px; height: 34px; padding: 2px; cursor: pointer; }
-.btn-outline-small {
-  background: transparent; border: 1.5px solid transparent; color: #b91c1c;
-  border-radius: 7px; padding: 5px 11px; font-size: 12px; font-weight: 600; width: auto;
-}
-.btn-outline-small:hover { background: var(--danger-tint); border-color: #fecaca; }
+/* Admin — 테두리 패널 + 얇은 선으로 나눈 행 */
+.admin-panel { border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+.admin-panel-title { font-size: 15px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 14px; }
+.admin-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-form input[type="text"], .admin-form input[type="email"] { flex: 0 1 240px; min-width: 0; font-size: 13px; padding: 10px 14px; border-radius: 10px; }
+.admin-hint { font-size: 12px; color: var(--text-faint); margin: 12px 0 0; }
+.admin-check { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-muted); font-weight: 500; cursor: pointer; white-space: nowrap; }
+.btn-add { background: var(--text); color: #fff; border: none; border-radius: 9px; padding: 10px 18px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.btn-add:hover { background: #000; }
+.admin-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); min-height: 58px; }
+.admin-row:last-child { border-bottom: none; }
+.admin-row-main { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-row-meta { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+.admin-row-meta.mono { font-size: 11.5px; }
+.admin-row.inactive .admin-row-main { color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--border2); }
+.role-dot { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--brand-dark); white-space: nowrap; }
+.role-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); margin-right: 6px; }
+.me-tag { font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--bg); border-radius: 6px; padding: 4px 10px; }
+.btn-sm-outline { background: #fff; border: 1.5px solid var(--border2); color: var(--text); border-radius: 8px; padding: 6px 11px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.btn-sm-outline:hover { border-color: var(--text-faint); }
+.btn-text-danger { background: none; border: none; color: #b91c1c; font-size: 12px; font-weight: 700; padding: 6px 8px; border-radius: 6px; white-space: nowrap; }
+.btn-text-danger:hover { background: var(--danger-tint); }
+/* 색 선택: 동그란 견본 */
+.swatch-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-faint); font-weight: 500; cursor: pointer; white-space: nowrap; }
+.swatch { width: 26px; height: 26px; padding: 0; border: 1.5px solid var(--border2); border-radius: 50%; cursor: pointer; overflow: hidden; background: none; }
+.swatch::-webkit-color-swatch-wrapper { padding: 2px; }
+.swatch::-webkit-color-swatch { border: none; border-radius: 50%; }
+.swatch::-moz-color-swatch { border: none; border-radius: 50%; }
+.swatch:hover { border-color: var(--text-faint); }
+.status-preview { font-size: 12px; padding: 4px 11px; }
 
 /* 데이터 정리 */
 .cleanup-panel { padding-top: 4px; max-width: 560px; }
@@ -274,14 +289,14 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .list-tab:hover { color: var(--text); }
 .list-tab.active { border-bottom-color: var(--text); color: var(--text); font-weight: 700; }
 
+/* 칸이 많아 좁은 창에서 넘치면 표만 가로 스크롤 (페이지 전체가 밀리지 않게) */
+.table-scroll { overflow-x: auto; }
 /* List table — 위쪽 검은 선 + 얇은 행 구분선 */
 .list-table { width: 100%; border-collapse: collapse; border-top: 1px solid var(--text); }
 .list-table th, .list-table td { border-bottom: 1px solid var(--line); padding: 13px 14px; text-align: left; font-size: 13.5px; vertical-align: middle; }
+/* 칸 안에서 줄바꿈하지 않음 — 좁으면 찌그러지는 대신 .table-scroll이 가로로 스크롤 */
 @media (min-width: 481px) {
-  .list-table td[data-label="순번"],
-  .list-table td[data-label="고객분류"],
-  .list-table td[data-label="접수일"],
-  .list-table td[data-label="접수자"] { white-space: nowrap; }
+  .list-table th, .list-table td { white-space: nowrap; }
 }
 .list-table td[data-label="순번"] { font-size: 12px; color: var(--text-faint); font-weight: 600; }
 .list-table td[data-label="접수일"], .list-table td[data-label="바코드번호"] { font-family: var(--mono); font-size: 12.5px; }
@@ -395,6 +410,9 @@ button.btn-outline-block { width: 100%; background: #fff; border: 1.5px solid va
 button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--text); }
 
 @media (max-width: 900px) {
+  #tab-nav { gap: 16px; }
+  #tab-nav-links button { padding: 0 12px; }
+  #tab-nav-links button::after { left: 12px; right: 12px; }
   .wizard-step { display: block; }
   .step-head { margin-bottom: 16px; }
   .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -409,6 +427,10 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   #tab-nav-links button { flex: 0 0 auto; padding: 0 14px; }
   #tab-nav-links button::after { left: 14px; right: 14px; }
   main { padding: 20px 16px 48px; }
+  .admin-panel { padding: 18px 16px; }
+  .admin-form input[type="text"], .admin-form input[type="email"] { flex: 1 1 100%; }
+  .admin-row { flex-wrap: wrap; gap: 8px 10px; }
+  .admin-row-main { flex: 1 1 100%; }
   .site-footer { padding: 0 16px; }
   .site-footer-inner { gap: 10px 14px; }
   .site-footer-slack { margin-left: 0; }

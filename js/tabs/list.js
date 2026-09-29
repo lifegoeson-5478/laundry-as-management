@@ -155,14 +155,16 @@ async function renderListTab(container, params) {
       ${specialBanner}
       <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색" value="${escapeHtml(searchText)}">
       ${bulkBar}
-      <table class="list-table">
-        <thead>
-          <tr><th><input type="checkbox" id="select-all-checkbox"></th>${headerCells}</tr>
-        </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="${LIST_COLUMNS.length + 1}">표시할 항목이 없습니다.</td></tr>`}
-        </tbody>
-      </table>
+      <div class="table-scroll">
+        <table class="list-table">
+          <thead>
+            <tr><th><input type="checkbox" id="select-all-checkbox"></th>${headerCells}</tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="${LIST_COLUMNS.length + 1}">표시할 항목이 없습니다.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
     `;
 
     container.querySelectorAll('.sortable-th').forEach((th) => {

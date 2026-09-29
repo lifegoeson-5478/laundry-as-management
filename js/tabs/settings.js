@@ -56,55 +56,72 @@ async function renderSettingsTab(container) {
 
   function drawStaffPanel(panel) {
     panel.innerHTML = `
-      <div id="staff-list">${loadingScreen('직원 목록을 불러오고 있어요')}</div>
-      <form id="add-staff-form" class="settings-form">
-        <input type="email" name="이메일" placeholder="이메일" required>
-        <input type="text" name="이름" placeholder="이름" required>
-        <select name="역할"><option value="일반">일반</option><option value="관리자">관리자</option></select>
-        <button type="submit" class="btn-primary-block">추가</button>
-      </form>
+      <section class="admin-panel">
+        <h3 class="admin-panel-title">새 계정 추가</h3>
+        <form id="add-staff-form" class="admin-form">
+          <input type="email" name="이메일" placeholder="이메일" required>
+          <input type="text" name="이름" placeholder="이름" required>
+          <label class="admin-check"><input type="checkbox" name="역할" value="관리자"> 관리자로 등록</label>
+          <button type="submit" class="btn-add">+ 추가</button>
+        </form>
+        <p class="admin-hint">추가한 이메일의 구글 계정으로 바로 로그인할 수 있어요.</p>
+      </section>
+      <section class="admin-panel">
+        <h3 class="admin-panel-title">계정 목록</h3>
+        <div id="staff-list">${loadingScreen('직원 목록을 불러오고 있어요')}</div>
+      </section>
     `;
+    const myEmail = (getSession() || {}).email;
+    let staffItems = [];
 
     async function loadStaff() {
       const result = await callApi('listStaff', {});
       const list = document.getElementById('staff-list');
       if (!list) return;
       if (!result.ok) { list.textContent = result.error; return; }
-      list.innerHTML = result.items.map((staff) => `
-        <div class="card settings-row" data-email="${escapeHtml(staff.이메일)}">
-          <div>
-            <strong>${escapeHtml(staff.이름)}</strong>
-            <div class="field-row-sub">${escapeHtml(staff.이메일)} · ${escapeHtml(staff.역할)}</div>
-          </div>
-          <div class="settings-row-actions">
-            <label><input type="checkbox" class="staff-active" ${String(staff.활성여부) === 'true' ? 'checked' : ''}> 활성</label>
-            <button type="button" class="delete-staff-btn btn-outline-small">삭제</button>
-          </div>
-        </div>
-      `).join('') || '<div class="field-empty">등록된 직원이 없습니다.</div>';
-
-      list.querySelectorAll('.staff-active').forEach((checkbox) => {
-        checkbox.addEventListener('change', async (e) => {
-          const email = e.target.closest('.card').dataset.email;
-          await callApi('updateStaff', { email: email, updates: { 활성여부: e.target.checked } });
-        });
-      });
-
-      list.querySelectorAll('.delete-staff-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const email = btn.closest('.card').dataset.email;
-          if (!(await showConfirm(email + ' 직원을 삭제할까요?'))) return;
-          const result = await callApi('deleteStaff', { email: email });
-          if (result.ok) loadStaff();
-          else await showAlert('삭제 실패: ' + result.error);
-        });
-      });
+      staffItems = result.items;
+      list.innerHTML = staffItems.map((staff) => {
+        const isAdmin = staff.역할 === '관리자';
+        const isActive = String(staff.활성여부) === 'true';
+        const actions = staff.이메일 === myEmail
+          ? '<span class="me-tag">나</span>'
+          : `<button type="button" class="btn-sm-outline" data-act="role">${isAdmin ? '관리자 해제' : '관리자로 지정'}</button>
+             <button type="button" class="btn-sm-outline" data-act="active">${isActive ? '비활성화' : '활성화'}</button>
+             <button type="button" class="btn-text-danger" data-act="delete">삭제</button>`;
+        return `
+          <div class="admin-row ${isActive ? '' : 'inactive'}" data-email="${escapeHtml(staff.이메일)}">
+            <strong class="admin-row-main">${escapeHtml(staff.이메일)}</strong>
+            <span class="admin-row-meta">${escapeHtml(staff.이름)}</span>
+            ${isActive ? '' : '<span class="admin-row-meta">비활성</span>'}
+            ${isAdmin ? '<span class="role-dot">관리자</span>' : ''}
+            ${actions}
+          </div>`;
+      }).join('') || '<div class="field-empty">등록된 직원이 없습니다.</div>';
     }
+
+    panel.querySelector('#staff-list').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      const email = btn.closest('.admin-row').dataset.email;
+      const staff = staffItems.find((s) => s.이메일 === email);
+      let result;
+      if (btn.dataset.act === 'role') {
+        const next = staff.역할 === '관리자' ? '일반' : '관리자';
+        result = await callApi('updateStaff', { email: email, updates: { 역할: next } });
+      } else if (btn.dataset.act === 'active') {
+        result = await callApi('updateStaff', { email: email, updates: { 활성여부: String(staff.활성여부) !== 'true' } });
+      } else {
+        if (!(await showConfirm(email + ' 계정을 삭제할까요?'))) return;
+        result = await callApi('deleteStaff', { email: email });
+      }
+      if (result.ok) loadStaff();
+      else await showAlert('변경 실패: ' + result.error);
+    });
 
     panel.querySelector('#add-staff-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const form = Object.fromEntries(formData.entries());
+      const form = Object.fromEntries(new FormData(e.target).entries());
+      form.역할 = form.역할 || '일반';
       const result = await callApi('addStaff', { form: form });
       if (result.ok) { e.target.reset(); loadStaff(); }
       else await showAlert('추가 실패: ' + result.error);
@@ -115,14 +132,33 @@ async function renderSettingsTab(container) {
 
   function drawStatusPanel(panel) {
     panel.innerHTML = `
-      <div id="status-list">${loadingScreen('상태값 목록을 불러오고 있어요')}</div>
-      <form id="add-status-form" class="settings-form">
-        <input type="text" name="name" placeholder="새 상태값" required>
-        <label class="settings-color-label">배경<input type="color" name="color" value="#00a991" title="배경색"></label>
-        <label class="settings-color-label">글자<input type="color" name="textColor" value="#ffffff" title="글자색"></label>
-        <button type="submit" class="btn-primary-block">추가</button>
-      </form>
+      <section class="admin-panel">
+        <h3 class="admin-panel-title">새 상태값 추가</h3>
+        <form id="add-status-form" class="admin-form">
+          <input type="text" name="name" placeholder="상태값 이름" required>
+          <label class="swatch-label">배경<input type="color" class="swatch" name="color" value="#CDF3E9"></label>
+          <label class="swatch-label">글자<input type="color" class="swatch" name="textColor" value="#08926C"></label>
+          <span class="badge status-preview" id="new-status-preview">미리보기</span>
+          <button type="submit" class="btn-add">+ 추가</button>
+        </form>
+        <p class="admin-hint">목록·현장·대시보드에서 이 색으로 표시돼요.</p>
+      </section>
+      <section class="admin-panel">
+        <h3 class="admin-panel-title">상태값 목록</h3>
+        <div id="status-list">${loadingScreen('상태값 목록을 불러오고 있어요')}</div>
+      </section>
     `;
+
+    const addForm = panel.querySelector('#add-status-form');
+    const newPreview = panel.querySelector('#new-status-preview');
+    function syncNewPreview() {
+      newPreview.textContent = addForm.elements.name.value || '미리보기';
+      newPreview.style.background = addForm.elements.color.value;
+      newPreview.style.color = addForm.elements.textColor.value;
+    }
+    addForm.addEventListener('input', syncNewPreview);
+    addForm.addEventListener('reset', () => setTimeout(syncNewPreview, 0));
+    syncNewPreview();
 
     async function loadStatus() {
       const result = await callApi('listStatus', {});
@@ -131,48 +167,59 @@ async function renderSettingsTab(container) {
       if (!result.ok) { list.textContent = result.error; return; }
       invalidateStatusCache();
       await getStatusOptions();
-      list.innerHTML = result.items.map((item) => `
-        <div class="card settings-row" data-name="${escapeHtml(item.name)}" data-color="${item.color || ''}" data-text-color="${item.textColor || ''}">
-          ${statusBadge(item.name)}
-          <div class="settings-row-actions">
-            <label class="settings-color-label">배경<input type="color" class="status-color-input" value="${item.color || '#9aa0ad'}" title="배경색"></label>
-            <label class="settings-color-label">글자<input type="color" class="status-text-color-input" value="${item.textColor || textColorForBg(item.color || '#9aa0ad')}" title="글자색"></label>
-            <button type="button" class="delete-status-btn btn-outline-small">삭제</button>
-          </div>
-        </div>
-      `).join('') || '<div class="field-empty">등록된 상태값이 없습니다.</div>';
-
-      list.querySelectorAll('.status-color-input, .status-text-color-input').forEach((input) => {
-        input.addEventListener('change', async (e) => {
-          const card = e.target.closest('.card');
-          const name = card.dataset.name;
-          const color = card.querySelector('.status-color-input').value;
-          const textColor = card.querySelector('.status-text-color-input').value;
-          const result = await callApi('updateStatusColor', { name: name, color: color, textColor: textColor });
-          if (result.ok) { invalidateStatusCache(); loadStatus(); }
-          else await showAlert('색상 변경 실패: ' + result.error);
-        });
-      });
-
-      list.querySelectorAll('.delete-status-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const name = btn.closest('.card').dataset.name;
-          if (!(await showConfirm(name + ' 상태값을 삭제할까요?'))) return;
-          const result = await callApi('deleteStatus', { name: name });
-          if (result.ok) { invalidateStatusCache(); loadStatus(); }
-          else await showAlert('삭제 실패: ' + result.error);
-        });
-      });
+      list.innerHTML = result.items.map((item) => {
+        const color = item.color || '#EAECEF';
+        const textColor = item.textColor || textColorForBg(color);
+        return `
+          <div class="admin-row" data-name="${escapeHtml(item.name)}">
+            <span class="admin-row-main"><span class="badge status-preview" style="background:${color};color:${textColor}">${escapeHtml(item.name)}</span></span>
+            <span class="admin-row-meta mono status-hex">${color.toUpperCase()} · ${textColor.toUpperCase()}</span>
+            <label class="swatch-label">배경<input type="color" class="swatch" data-kind="color" value="${color}"></label>
+            <label class="swatch-label">글자<input type="color" class="swatch" data-kind="text" value="${textColor}"></label>
+            <button type="button" class="btn-text-danger" data-act="delete">삭제</button>
+          </div>`;
+      }).join('') || '<div class="field-empty">등록된 상태값이 없습니다.</div>';
     }
 
-    panel.querySelector('#add-status-form').addEventListener('submit', async (e) => {
+    const list = panel.querySelector('#status-list');
+    function rowColors(row) {
+      return {
+        color: row.querySelector('[data-kind="color"]').value,
+        textColor: row.querySelector('[data-kind="text"]').value
+      };
+    }
+    // 색을 고르는 동안 미리보기만 바꾸고, 고르기를 마치면(change) 저장
+    list.addEventListener('input', (e) => {
+      const row = e.target.closest('.admin-row');
+      if (!row) return;
+      const { color, textColor } = rowColors(row);
+      const chip = row.querySelector('.status-preview');
+      chip.style.background = color;
+      chip.style.color = textColor;
+      row.querySelector('.status-hex').textContent = `${color.toUpperCase()} · ${textColor.toUpperCase()}`;
+    });
+    list.addEventListener('change', async (e) => {
+      const row = e.target.closest('.admin-row');
+      if (!row) return;
+      const result = await callApi('updateStatusColor', Object.assign({ name: row.dataset.name }, rowColors(row)));
+      if (result.ok) invalidateStatusCache();
+      else await showAlert('색상 변경 실패: ' + result.error);
+    });
+    list.addEventListener('click', async (e) => {
+      if (!e.target.closest('button[data-act="delete"]')) return;
+      const name = e.target.closest('.admin-row').dataset.name;
+      if (!(await showConfirm(name + ' 상태값을 삭제할까요?'))) return;
+      const result = await callApi('deleteStatus', { name: name });
+      if (result.ok) { invalidateStatusCache(); loadStatus(); }
+      else await showAlert('삭제 실패: ' + result.error);
+    });
+
+    addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const name = formData.get('name');
-      const color = formData.get('color');
-      const textColor = formData.get('textColor');
-      const result = await callApi('addStatus', { name: name, color: color, textColor: textColor });
-      if (result.ok) { e.target.reset(); invalidateStatusCache(); loadStatus(); }
+      const result = await callApi('addStatus', {
+        name: addForm.elements.name.value, color: addForm.elements.color.value, textColor: addForm.elements.textColor.value
+      });
+      if (result.ok) { addForm.reset(); invalidateStatusCache(); loadStatus(); }
       else await showAlert('추가 실패: ' + result.error);
     });
 
