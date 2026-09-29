@@ -83,7 +83,7 @@ function textColorForBg(hex) {
 function loadingScreen(label, variant) {
   const bar = (w, cls) => `<span class="skel ${cls || ''}" style="width:${w}%"></span>`;
   const body = variant === 'stats'
-    ? [3, 2, 5].map((cells) => `
+    ? [3, 3, 5].map((cells) => `
         <div class="skel-section">
           ${bar(14, 'skel-label')}
           <div class="skel-stats">${Array.from({ length: cells }, () => `<div class="skel-stat">${bar(40)}${bar(28, 'skel-num')}</div>`).join('')}</div>

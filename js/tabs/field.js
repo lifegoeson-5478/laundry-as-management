@@ -10,12 +10,18 @@ const FIELD_SECTIONS = [
 
 let fieldItemsById = {};
 
+// 적힌 값만 점으로 이어 붙임 (비었거나 '-'만 적힌 칸은 뺌)
+function joinFilled_(...values) {
+  return values.map((v) => String(v || '').trim()).filter((v) => v && v !== '-').map(escapeHtml).join(' · ');
+}
+
 function renderFieldRow(item) {
   return `
     <div class="field-row" data-id="${escapeHtml(item.id)}">
       <div class="field-row-main">
         <strong>${escapeHtml(item.회원카드)}</strong>
-        <div class="field-row-sub">브랜드 ${escapeHtml(item.브랜드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.품목)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
+        <div class="field-row-sub">${joinFilled_(item.브랜드, item.바코드번호)}</div>
+        <div class="field-row-sub">${joinFilled_(item.품목, item.매장위치, item.손상부위)}</div>
       </div>
       ${statusBadge(item.상태)}
     </div>

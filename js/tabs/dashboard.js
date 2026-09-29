@@ -78,11 +78,15 @@ async function renderDashboardTab(container) {
       <div class="stat-card"><div class="stat-label">완료</div><div class="stat-value">${result.totalClosed}</div></div>
     </div>
 
-    <h2>AS 접수 · 회수 필요 현황</h2>
+    <h2>AS 접수 · 진행 · 회수 현황</h2>
     <div class="stat-grid">
       <div class="stat-card clickable" id="need-intake-card">
         <div class="stat-label">AS 접수 필요</div>
         <div class="stat-value">${result.needIntake}</div>
+      </div>
+      <div class="stat-card clickable" id="in-progress-card">
+        <div class="stat-label">AS 진행중</div>
+        <div class="stat-value">${(result.byStatus && result.byStatus['AS 진행중']) || 0}</div>
       </div>
       <div class="stat-card clickable" id="need-pickup-card">
         <div class="stat-label">AS 회수 필요</div>
@@ -105,6 +109,9 @@ async function renderDashboardTab(container) {
 
   document.getElementById('need-intake-card').addEventListener('click', () => {
     showTab('field', { section: '접수 필요' });
+  });
+  document.getElementById('in-progress-card').addEventListener('click', () => {
+    showTab('field', { section: 'AS 진행중' });
   });
   document.getElementById('need-pickup-card').addEventListener('click', () => {
     showTab('field', { section: '회수 필요' });
