@@ -444,7 +444,7 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   /* iPhone은 16px 미만 입력칸을 누르면 화면을 확대해버림 */
   input, select, textarea { font-size: 16px !important; }   /* 검색창·어드민 입력칸의 더 구체적인 규칙보다 우선 */
   /* 현장: 매장위치·손상부위가 잘리지 않게 줄바꿈, 버튼은 손가락 크기로 */
-  .field-row { align-items: flex-start; padding: 14px 2px; }
+  .field-row { padding: 14px 2px; }
   .field-row-sub { white-space: normal; line-height: 1.5; }
   .field-buttons.chip-group { flex-wrap: nowrap; }
   .field-status-btn { flex: 1; min-height: 44px; padding: 8px 6px; }
