@@ -475,6 +475,13 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   .list-cards { display: block; }
 }
 
+/* 알림 토스트 (새 버전 배포 안내) */
+.toast {
+  position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); bottom: 32px; z-index: 3000;
+  background: var(--text); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2); text-align: center; animation: fadeUp .3s var(--ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

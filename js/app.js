@@ -68,6 +68,40 @@ function init() {
   }
 }
 
+// ============================================================
+// 새 버전 배포 감지 → 자동 새로고침 (매장 정보 시스템처럼 1분마다 확인)
+// config.js의 APP_VERSION이 바뀌면 새 배포로 본다. 입력 중이면 다음 확인 때로 미룬다.
+// ============================================================
+function isUserEditing_() {
+  if (document.querySelector('.app-modal-overlay.open')) return true;
+  const focused = document.activeElement;
+  if (focused && focused.matches('input, textarea, select')) return true;
+  const intake = document.getElementById('intake-form');
+  return !!intake && [...intake.querySelectorAll('input:not([type=hidden]), textarea')].some((el) => el.value);
+}
+
+async function checkForNewVersion_() {
+  try {
+    // cache: 'reload' → 네트워크에서 새로 받고 브라우저 캐시도 갱신
+    const text = await (await fetch('js/config.js', { cache: 'reload' })).text();
+    const match = text.match(/APP_VERSION = '([^']+)'/);
+    if (!match || match[1] === APP_VERSION || isUserEditing_()) return;
+    // GitHub Pages가 파일을 10분간 캐시하므로, 새로고침 전에 JS·CSS를 새로 받아 둔다
+    const assets = [...document.querySelectorAll('script[src^="js/"], link[href^="css/"]')].map((el) => el.src || el.href);
+    await Promise.all(assets.map((url) => fetch(url, { cache: 'reload' })));
+    showToast_('새 버전(v' + match[1] + ')이 배포되어 새로고침합니다');
+    setTimeout(() => location.reload(), 1200);
+  } catch (err) { /* 오프라인 등 — 다음 주기에 다시 시도 */ }
+}
+setInterval(checkForNewVersion_, 60000);
+
+function showToast_(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+}
+
 if (document.readyState === 'complete') {
   init();
 } else {
