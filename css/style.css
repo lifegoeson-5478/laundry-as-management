@@ -159,7 +159,9 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .admin-row-main { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-row-meta { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
 .admin-row-meta.mono { font-size: 11.5px; }
-.admin-row.inactive .admin-row-main { color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--border2); }
+.admin-row.inactive .admin-row-main { color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--danger); text-decoration-thickness: 1.5px; }
+/* 비활성 계정 묶음 머리 (목록의 달 묶음과 같은 모양) */
+.list-month.admin-group { margin-top: 8px; border-radius: 8px; border-bottom: none; padding: 10px 12px; }
 .role-dot { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--brand-dark); white-space: nowrap; }
 .role-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); margin-right: 6px; }
 .me-tag { font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--bg); border-radius: 6px; padding: 4px 10px; }
@@ -300,6 +302,19 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .list-table thead th.sortable-th.sorted { color: var(--text); font-weight: 700; }
 .list-table tbody tr { cursor: pointer; transition: background .1s; }
 .list-table tbody tr:hover, .list-table tbody tr.clickable-row:hover { background: #ECEEF1; }
+/* 휴대폰 목록 카드 (480px 이하에서만 표 대신 보임) */
+.list-cards { display: none; border-top: 1px solid var(--text); }
+.list-month { padding: 10px 4px; font-size: 12px; font-weight: 800; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+.list-month span { font-weight: 500; color: var(--text-faint); }
+.list-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.list-card:active { background: #ECEEF1; }
+.list-card .row-select-checkbox { margin-top: 2px; width: 18px; height: 18px; flex-shrink: 0; }
+.list-card-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.list-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.list-card-top strong { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-card-top .status-chip-trigger { flex-shrink: 0; padding: 6px 12px; }
+.list-card-sub { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.list-card-meta { font-size: 12px; color: var(--text-faint); line-height: 1.5; }
 /* 달 묶음 머리 행 (누르면 접기/펼치기) */
 .list-table tbody tr.month-row, .list-table tbody tr.month-row:hover { background: var(--bg); }
 .list-table tr.month-row td { padding: 9px 14px; font-size: 12px; font-weight: 800; color: var(--text-muted); user-select: none; }
@@ -443,37 +458,21 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   .site-footer { padding: 0 16px; }
   .site-footer-inner { gap: 10px 14px; }
   .site-footer-slack { margin-left: 0; }
-  .page-title { font-size: 32px; margin-top: 16px; }
-  .page-head { margin-bottom: 22px; }
-  .stat-card .stat-value { font-size: 26px; }
-  .stat-card:nth-child(2n) { border-right: none; }
-  .stat-grid { grid-template-columns: 1fr 1fr; }
-  .list-table { border-top: none; }
-  .list-table, .list-table thead, .list-table tbody, .list-table th, .list-table td, .list-table tr { display: block; }
-  .list-table thead { display: none; }
-  .list-table tr { margin-bottom: 10px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
-  .list-table td {
-    display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    border-bottom: 1px solid var(--line); text-align: right;
-  }
-  .list-table tr td:last-child { border-bottom: none; }
-  .list-table tr.month-row { border: none; background: none; margin: 18px 0 8px; }
-  .list-table tr.month-row td { display: block; text-align: left; padding: 4px 2px; background: none; }
-  .list-table tr.month-row td::before { content: none; }
-  .list-table td::before {
-    content: attr(data-label); font-weight: 500; color: var(--text-faint); font-family: 'Pretendard', sans-serif;
-    text-align: left; flex-shrink: 0;
-  }
-
-  /* 담당자별 진행 현황: 이름/건수 한 줄 표 유지 */
-  .staff-table { border-top: 1px solid var(--text); }
-  .staff-table, .staff-table thead, .staff-table tbody, .staff-table tr { display: table; width: 100%; }
-  .staff-table thead { display: table-header-group; }
-  .staff-table tbody { display: table-row-group; }
-  .staff-table tr { display: table-row; margin-bottom: 0; border: none; border-radius: 0; background: none; }
-  .staff-table th, .staff-table td { display: table-cell; border-bottom: 1px solid var(--line); text-align: left; }
-  .staff-table th:last-child, .staff-table td:last-child { text-align: right; }
-  .staff-table td::before { content: none; }
+  /* 제목 영역을 줄여 내용이 더 위에서 시작 */
+  .page-title { font-size: 28px; margin-top: 12px; }
+  .page-head { margin-bottom: 18px; }
+  h2 { margin-top: 28px; }
+  /* 숫자 칸: 3칸씩 (3개·5개 묶음에서 한 칸만 남는 줄이 덜 생김) */
+  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .stat-card { padding: 14px 12px 16px; }
+  .stat-card .stat-value { font-size: 24px; }
+  /* 하위 탭(목록 필터 등)은 두 줄로 꺾지 않고 옆으로 밀기 */
+  #list-tab-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 18px; padding: 0 12px; }
+  #list-tab-bar::-webkit-scrollbar { display: none; }
+  .list-tab { flex: 0 0 auto; white-space: nowrap; }
+  /* 목록: 표 대신 카드 */
+  .table-scroll { display: none; }
+  .list-cards { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {

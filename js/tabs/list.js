@@ -134,6 +134,29 @@ async function renderListTab(container, params) {
       return header + (isOpen(month) ? groups[month].map(renderRow).join('') : '');
     }).join('');
 
+    // 휴대폰용: 표 대신 1건 = 3줄 카드 (CSS가 폭에 따라 표/카드 중 하나만 보여줌)
+    const cards = monthKeys.map((month) => {
+      const label = month === '날짜없음' ? '날짜 없음' : month.replace('-', '년 ') + '월';
+      const header = `<div class="month-row list-month" data-month="${escapeHtml(month)}">${isOpen(month) ? '▼' : '▶'} ${escapeHtml(label)} <span>(${groups[month].length}건)</span></div>`;
+      return header + (isOpen(month) ? groups[month].map(renderCard).join('') : '');
+    }).join('');
+
+    function renderCard(item) {
+      const join = (...values) => values.filter((v) => v).map(escapeHtml).join(' · ');
+      return `
+      <div class="list-card" data-id="${escapeHtml(item.id)}">
+        <input type="checkbox" class="row-select-checkbox" data-id="${escapeHtml(item.id)}" ${selectedIds.has(item.id) ? 'checked' : ''} aria-label="선택">
+        <div class="list-card-main">
+          <div class="list-card-top">
+            <strong>${escapeHtml(item.회원카드)}</strong>
+            <button type="button" class="status-chip-trigger ${statusChipClass(item.상태)}" style="${statusChipStyle(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
+          </div>
+          <div class="list-card-sub">${join(item.브랜드, item.품목, item.바코드번호)}</div>
+          <div class="list-card-meta">${join(formatDateOnly(item.접수일시), item.접수자, item.고객분류, item.회원연락처)}</div>
+        </div>
+      </div>`;
+    }
+
     function renderRow(item) {
       return `
       <tr data-id="${escapeHtml(item.id)}">
@@ -188,6 +211,7 @@ async function renderListTab(container, params) {
           </tbody>
         </table>
       </div>
+      <div class="list-cards">${cards || '<div class="field-empty">표시할 항목이 없습니다.</div>'}</div>
     `;
 
     container.querySelectorAll('.sortable-th').forEach((th) => {
@@ -250,7 +274,7 @@ async function renderListTab(container, params) {
       });
     });
 
-    container.querySelectorAll('.list-table tbody tr[data-id]').forEach((row) => {
+    container.querySelectorAll('.list-table tbody tr[data-id], .list-card').forEach((row) => {
       row.addEventListener('click', () => openListDetailModal(row.dataset.id));
     });
 
@@ -383,12 +407,12 @@ async function renderListTab(container, params) {
           return;
         }
         item.상태 = newStatus;
-        const rowTrigger = container.querySelector(`.status-chip-trigger[data-id="${id}"]`);
-        if (rowTrigger) {
+        // 표와 휴대폰 카드 양쪽에 같은 칩이 있음
+        container.querySelectorAll(`.status-chip-trigger[data-id="${id}"]`).forEach((rowTrigger) => {
           rowTrigger.className = 'status-chip-trigger ' + statusChipClass(newStatus);
           rowTrigger.style.cssText = statusChipStyle(newStatus);
           rowTrigger.textContent = newStatus;
-        }
+        });
       });
     });
   }

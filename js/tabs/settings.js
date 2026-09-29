@@ -73,6 +73,8 @@ async function renderSettingsTab(container) {
     `;
     const myEmail = (getSession() || {}).email;
     let staffItems = [];
+    let showInactive = false; // 비활성 계정 묶음은 처음엔 접힘
+    const isActiveStaff = (staff) => String(staff.활성여부) === 'true';
 
     async function loadStaff() {
       const result = await callApi('listStaff', {});
@@ -80,9 +82,24 @@ async function renderSettingsTab(container) {
       if (!list) return;
       if (!result.ok) { list.textContent = result.error; return; }
       staffItems = result.items;
-      list.innerHTML = staffItems.map((staff) => {
+      renderStaff();
+    }
+
+    // 활성 계정 먼저, 비활성 계정은 아래 접히는 묶음으로
+    function renderStaff() {
+      const list = document.getElementById('staff-list');
+      const active = staffItems.filter(isActiveStaff);
+      const inactive = staffItems.filter((s) => !isActiveStaff(s));
+      const inactiveGroup = inactive.length ? `
+        <div class="month-row list-month admin-group" id="inactive-toggle">${showInactive ? '▼' : '▶'} 비활성 계정 <span>(${inactive.length}명)</span></div>
+        ${showInactive ? inactive.map(renderStaffRow).join('') : ''}` : '';
+      list.innerHTML = (active.map(renderStaffRow).join('') + inactiveGroup) ||
+        '<div class="field-empty">등록된 직원이 없습니다.</div>';
+    }
+
+    function renderStaffRow(staff) {
         const isAdmin = staff.역할 === '관리자';
-        const isActive = String(staff.활성여부) === 'true';
+        const isActive = isActiveStaff(staff);
         const actions = staff.이메일 === myEmail
           ? '<span class="me-tag">나</span>'
           : `<button type="button" class="btn-sm-outline" data-act="role">${isAdmin ? '관리자 해제' : '관리자로 지정'}</button>
@@ -96,10 +113,14 @@ async function renderSettingsTab(container) {
             ${isAdmin ? '<span class="role-dot">관리자</span>' : ''}
             ${actions}
           </div>`;
-      }).join('') || '<div class="field-empty">등록된 직원이 없습니다.</div>';
     }
 
     panel.querySelector('#staff-list').addEventListener('click', async (e) => {
+      if (e.target.closest('#inactive-toggle')) {
+        showInactive = !showInactive;
+        renderStaff();
+        return;
+      }
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
       const email = btn.closest('.admin-row').dataset.email;
