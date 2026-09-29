@@ -60,6 +60,19 @@ function updateRowById(sheetName, id, updates) {
   return false;
 }
 
+function logStatusChange_(asId, actorName, oldStatus, newStatus) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  createSheetIfMissing_(ss, '상태변경이력', ['id', '대상id', '변경일시', '변경자', '이전상태', '새상태']);
+  appendRowObject('상태변경이력', {
+    id: Utilities.getUuid(),
+    대상id: asId,
+    변경일시: new Date().toISOString(),
+    변경자: actorName,
+    이전상태: oldStatus || '',
+    새상태: newStatus
+  });
+}
+
 function deleteRowById(sheetName, id) {
   var sheet = getSheet_(sheetName);
   var values = sheet.getDataRange().getValues();

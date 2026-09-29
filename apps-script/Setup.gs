@@ -13,6 +13,9 @@ function setupSpreadsheet() {
   var staffHeaders = ['이메일', '이름', '역할', '활성여부'];
   createSheetIfMissing_(ss, '직원목록', staffHeaders);
 
+  var historyHeaders = ['id', '대상id', '변경일시', '변경자', '이전상태', '새상태'];
+  createSheetIfMissing_(ss, '상태변경이력', historyHeaders);
+
   var statusHeaders = ['상태명', '정렬순서', '색상', '글자색'];
   var statusSheet = createSheetIfMissing_(ss, '상태값', statusHeaders);
   var initialStatuses = [

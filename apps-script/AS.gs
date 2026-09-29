@@ -44,6 +44,16 @@ function handleSubmitAS_(payload) {
   return { ok: true, record: record };
 }
 
+function handleCheckDuplicateAS_(payload) {
+  requireSession_(payload);
+  if (!payload.회원카드 || !payload.바코드번호) return { ok: true, items: [] };
+  var rows = getCache_('listAS') || getAllRows('AS접수');
+  var matches = rows.filter(function (r) {
+    return r.회원카드 === payload.회원카드 && r.바코드번호 === payload.바코드번호;
+  });
+  return { ok: true, items: matches };
+}
+
 function handleListAS_(payload) {
   requireSession_(payload);
   var cached = getCache_('listAS');
@@ -86,14 +96,24 @@ function handleDeleteAS_(payload) {
 }
 
 function handleUpdateStatus_(payload) {
-  requireSession_(payload);
+  var session = requireSession_(payload);
   if (!payload.id || !payload.status) {
     return { ok: false, error: 'id와 status가 필요합니다.' };
   }
+  var current = getAllRows('AS접수').find(function (r) { return r.id === payload.id; });
   var updated = updateRowById('AS접수', payload.id, { 상태: payload.status });
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
   clearCache_(['listAS', 'dashboard']);
+  logStatusChange_(payload.id, session.name, current ? current.상태 : '', payload.status);
   return { ok: true };
+}
+
+function handleListStatusHistory_(payload) {
+  requireSession_(payload);
+  if (!payload.id) return { ok: false, error: 'id가 필요합니다.' };
+  var rows = getAllRows('상태변경이력').filter(function (r) { return r.대상id === payload.id; });
+  rows.sort(function (a, b) { return new Date(b.변경일시) - new Date(a.변경일시); });
+  return { ok: true, items: rows };
 }
 
 function handleFieldUpdate_(payload) {
@@ -105,25 +125,30 @@ function handleFieldUpdate_(payload) {
   if (!mappedStatus) {
     return { ok: false, error: '알 수 없는 현장 상태입니다: ' + payload.fieldStatus };
   }
+
+  var item = getAllRows('AS접수').find(function (r) { return r.id === payload.id; });
+  if (!item) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+  var oldStatus = item.상태;
+
   var updated = updateRowById('AS접수', payload.id, {
     상태: mappedStatus,
     현장메모: payload.memo || ''
   });
   if (!updated) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
   clearCache_(['listAS', 'dashboard']);
+  logStatusChange_(payload.id, session.name, oldStatus, mappedStatus);
 
-  var item = getAllRows('AS접수').find(function (r) { return r.id === payload.id; });
-  var mention = mentionForStaffName_(item ? item.접수자 : '');
-  var laundry = [item ? item.브랜드 : '', item ? item.품목 : '', item ? item.색상 : '', item ? item.손상부위 : '']
+  var mention = mentionForStaffName_(item.접수자);
+  var laundry = [item.브랜드, item.품목, item.색상, item.손상부위]
     .filter(function (v) { return v; })
     .join(' / ');
 
   var messageLines = [
     '📦 현장 업데이트',
     '담당자: ' + mention,
-    '회원카드: ' + (item ? item.회원카드 : ''),
-    '회원번호: ' + (item ? item.회원연락처 : ''),
-    '바코드: ' + (item ? item.바코드번호 : ''),
+    '회원카드: ' + item.회원카드,
+    '회원번호: ' + item.회원연락처,
+    '바코드: ' + item.바코드번호,
     'AS 세탁물: ' + laundry,
     '상태: ' + mappedStatus,
     '메모: ' + (payload.memo || '')

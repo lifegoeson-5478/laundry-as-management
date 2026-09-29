@@ -37,6 +37,8 @@ function doPost(e) {
         return jsonResponse(handleLogin_(payload));
       case 'submitAS':
         return jsonResponse(handleSubmitAS_(payload));
+      case 'checkDuplicateAS':
+        return jsonResponse(handleCheckDuplicateAS_(payload));
       case 'listAS':
         return jsonResponse(handleListAS_(payload));
       case 'updateAS':
@@ -47,6 +49,8 @@ function doPost(e) {
         return jsonResponse(handleUpdateStatus_(payload));
       case 'fieldUpdate':
         return jsonResponse(handleFieldUpdate_(payload));
+      case 'listStatusHistory':
+        return jsonResponse(handleListStatusHistory_(payload));
       case 'dashboard':
         return jsonResponse(handleDashboard_(payload));
       case 'listStaff':
