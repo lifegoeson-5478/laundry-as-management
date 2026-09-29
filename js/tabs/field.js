@@ -15,7 +15,7 @@ function renderFieldRow(item) {
     <div class="field-row" data-id="${escapeHtml(item.id)}">
       <div class="field-row-main">
         <strong>${escapeHtml(item.회원카드)}</strong>
-        <div class="field-row-sub">브랜드 ${escapeHtml(item.브랜드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
+        <div class="field-row-sub">브랜드 ${escapeHtml(item.브랜드)} · 바코드 ${escapeHtml(item.바코드번호)} · ${escapeHtml(item.품목)} · ${escapeHtml(item.매장위치)} · ${escapeHtml(item.손상부위)}</div>
       </div>
       ${statusBadge(item.상태)}
     </div>
@@ -91,6 +91,8 @@ function openFieldModal(id) {
         ${detailRow('브랜드', escapeHtml(item.브랜드))}
         ${detailRow('회원카드', escapeHtml(item.회원카드))}
         ${detailRow('바코드번호', escapeHtml(item.바코드번호))}
+        ${detailRow('품목', escapeHtml(item.품목))}
+        ${detailRow('매장위치', escapeHtml(item.매장위치))}
         ${detailRow('손상부위', escapeHtml(item.손상부위))}
         ${detailRow('현재상태', statusBadge(item.상태))}
       </div>
@@ -135,6 +137,9 @@ function openFieldModal(id) {
     if (result.ok) {
       await showAlert('저장되었습니다.');
       closeAppModal();
+      // 처리한 건이 목록에 그대로 남지 않게, 보던 하위 탭 그대로 다시 불러옴
+      const section = document.querySelector('#list-tab-bar .list-tab.active');
+      showTab('field', { section: section ? section.dataset.section : undefined });
     } else {
       await showAlert('저장 실패: ' + result.error);
     }

@@ -232,6 +232,7 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
   backdrop-filter: blur(2px);
 }
 .app-modal-overlay.open { display: flex; animation: fadeIn .18s ease; }
+#app-dialog-overlay { z-index: 1100; }   /* 알림·확인창은 상세 창 위에 */
 /* 그림자는 바깥 래퍼에 drop-shadow로 (상세 모달의 mask가 box-shadow까지 잘라서) */
 .app-modal-wrap { filter: drop-shadow(0 12px 32px rgba(16,24,40,.14)); }
 .app-modal-overlay.open .app-modal-wrap { animation: modalIn .24s var(--ease-out); }
@@ -425,6 +426,16 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   #tab-nav-links button { flex: 0 0 auto; padding: 0 14px; }
   #tab-nav-links button::after { left: 14px; right: 14px; }
   main { padding: 20px 16px 48px; }
+  /* iPhone은 16px 미만 입력칸을 누르면 화면을 확대해버림 */
+  input, select, textarea { font-size: 16px !important; }   /* 검색창·어드민 입력칸의 더 구체적인 규칙보다 우선 */
+  /* 현장: 매장위치·손상부위가 잘리지 않게 줄바꿈, 버튼은 손가락 크기로 */
+  .field-row { align-items: flex-start; padding: 14px 2px; }
+  .field-row-sub { white-space: normal; line-height: 1.5; }
+  .field-buttons.chip-group { flex-wrap: nowrap; }
+  .field-status-btn { flex: 1; min-height: 44px; padding: 8px 6px; }
+  .field-save-btn { min-height: 48px; }
+  .modal-header { padding: 20px 18px 14px 20px; }
+  .modal-body { padding: 18px 20px 22px; }
   .admin-panel { padding: 18px 16px; }
   .admin-form input[type="text"], .admin-form input[type="email"] { flex: 1 1 100%; }
   .admin-row { flex-wrap: wrap; gap: 8px 10px; }

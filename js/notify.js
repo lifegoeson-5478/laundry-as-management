@@ -1,15 +1,21 @@
-function ensureAppModal_() {
-  if (document.getElementById('app-modal-overlay')) return;
-  const div = document.createElement('div');
-  div.id = 'app-modal-overlay';
+// 상세 창(app-modal-overlay)과 알림·확인창(app-dialog-overlay)은 따로 둔다.
+// 같은 틀을 쓰면 상세 창 위에 뜬 알림이 입력 중인 내용을 덮어써 지워버린다.
+function ensureOverlay_(id) {
+  let div = document.getElementById(id);
+  if (div) return div;
+  div = document.createElement('div');
+  div.id = id;
   div.className = 'app-modal-overlay';
   div.innerHTML = '<div class="app-modal-wrap"><div class="app-modal"></div></div>';
   div.addEventListener('click', (e) => {
-    if (e.target === div && div.dataset.dismissable === 'true') {
-      closeAppModal();
-    }
+    if (e.target === div && div.dataset.dismissable === 'true') div.classList.remove('open');
   });
   document.body.appendChild(div);
+  return div;
+}
+
+function ensureAppModal_() {
+  ensureOverlay_('app-dialog-overlay');
 }
 
 function closeAppModal() {
@@ -20,7 +26,7 @@ function closeAppModal() {
 function showAlert(message) {
   ensureAppModal_();
   return new Promise((resolve) => {
-    const overlay = document.getElementById('app-modal-overlay');
+    const overlay = document.getElementById('app-dialog-overlay');
     overlay.dataset.dismissable = 'false';
     const modal = overlay.querySelector('.app-modal');
     modal.classList.remove('wide');
@@ -41,7 +47,7 @@ function showAlert(message) {
 function showConfirm(message) {
   ensureAppModal_();
   return new Promise((resolve) => {
-    const overlay = document.getElementById('app-modal-overlay');
+    const overlay = document.getElementById('app-dialog-overlay');
     overlay.dataset.dismissable = 'false';
     const modal = overlay.querySelector('.app-modal');
     modal.classList.remove('wide');
@@ -67,7 +73,7 @@ function showConfirm(message) {
 function showDuplicateConfirm(matches) {
   ensureAppModal_();
   return new Promise((resolve) => {
-    const overlay = document.getElementById('app-modal-overlay');
+    const overlay = document.getElementById('app-dialog-overlay');
     overlay.dataset.dismissable = 'false';
     const modal = overlay.querySelector('.app-modal');
     modal.classList.remove('wide');
@@ -102,8 +108,7 @@ function showDuplicateConfirm(matches) {
 }
 
 function openDetailModal(title, bodyHtml) {
-  ensureAppModal_();
-  const overlay = document.getElementById('app-modal-overlay');
+  const overlay = ensureOverlay_('app-modal-overlay');
   overlay.dataset.dismissable = 'true';
   const modal = overlay.querySelector('.app-modal');
   modal.classList.add('wide');
