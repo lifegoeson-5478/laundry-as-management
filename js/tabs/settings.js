@@ -1,4 +1,4 @@
-const SETTINGS_SECTIONS = ['직원 관리', '상태값 관리'];
+const SETTINGS_SECTIONS = ['직원 관리', '상태값 관리', '데이터 정리'];
 
 async function renderSettingsTab(container) {
   let currentSection = SETTINGS_SECTIONS[0];
@@ -22,7 +22,36 @@ async function renderSettingsTab(container) {
 
     const panel = document.getElementById('settings-panel');
     if (currentSection === '직원 관리') drawStaffPanel(panel);
-    else drawStatusPanel(panel);
+    else if (currentSection === '상태값 관리') drawStatusPanel(panel);
+    else drawCleanupPanel(panel);
+  }
+
+  async function drawCleanupPanel(panel) {
+    panel.innerHTML = loadingScreen('오래된 접수 건을 세고 있어요');
+    const preview = await callApi('deleteOldAS', { dryRun: true });
+    if (!document.body.contains(panel)) return;
+    if (!preview.ok) { panel.textContent = preview.error; return; }
+    const cutoffDate = new Date(preview.cutoff).toLocaleDateString('sv-SE');
+    panel.innerHTML = `
+      <div class="cleanup-panel">
+        <div class="cleanup-desc">
+          오늘 기준 6개월 전(<b>${escapeHtml(cutoffDate)}</b>)보다 먼저 접수된 건을 삭제합니다.<br>
+          삭제한 건은 되돌릴 수 없어요.
+        </div>
+        <div class="cleanup-count"><span class="mono">대상</span><b>${preview.count}</b>건</div>
+        <button type="button" class="btn-danger" id="delete-old-btn" ${preview.count ? '' : 'disabled'}>6개월 지난 접수 건 삭제</button>
+      </div>
+    `;
+    panel.querySelector('#delete-old-btn').addEventListener('click', async () => {
+      if (!(await showConfirm(`${cutoffDate} 이전에 접수된 ${preview.count}건을 삭제할까요?\n삭제 후에는 되돌릴 수 없습니다.`))) return;
+      const result = await callApi('deleteOldAS', {});
+      if (!result.ok) { await showAlert('삭제 실패: ' + result.error); return; }
+      sessionStorage.removeItem('tabHtml_list');
+      sessionStorage.removeItem('tabHtml_field');
+      sessionStorage.removeItem('tabHtml_dashboard');
+      await showAlert(`${result.count}건을 삭제했습니다.`);
+      drawCleanupPanel(panel);
+    });
   }
 
   function drawStaffPanel(panel) {

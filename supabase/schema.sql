@@ -57,10 +57,4 @@ alter table "직원목록" enable row level security;
 alter table "상태변경이력" enable row level security;
 alter table "상태값" enable row level security;
 
--- 기존 Cleanup.gs 대체: 매일 새벽 3시(KST = 18:00 UTC) 6개월 지난 접수건 삭제
-create extension if not exists pg_cron;
-select cron.schedule(
-  'as-cleanup-old-records',
-  '0 18 * * *',
-  $$delete from "AS접수" where "접수일시" < now() - interval '6 months'$$
-);
+-- 6개월 지난 접수건 삭제는 자동(pg_cron) 대신 어드민 → 데이터 정리 버튼으로 한다.

@@ -6,6 +6,14 @@ const TAB_RENDERERS = {
   settings: renderSettingsTab
 };
 
+const TAB_HEADS = {
+  dashboard: ['AS / DASHBOARD', '대시보드'],
+  intake: ['AS / INTAKE', 'AS 접수'],
+  list: ['AS / LIST', '접수 목록'],
+  field: ['AS / FIELD', '현장 처리'],
+  settings: ['AS / ADMIN', '어드민']
+};
+
 let activeTab = null;
 
 function showTab(tabName, params) {
@@ -13,6 +21,8 @@ function showTab(tabName, params) {
     btn.classList.toggle('current', btn.dataset.tab === tabName);
   });
   activeTab = tabName;
+  document.getElementById('page-kicker').textContent = TAB_HEADS[tabName][0];
+  document.getElementById('page-title-text').textContent = TAB_HEADS[tabName][1];
   document.getElementById('tab-content').innerHTML = '';
   TAB_RENDERERS[tabName](document.getElementById('tab-content'), params);
 }
@@ -34,6 +44,11 @@ function startApp(session) {
 }
 
 function init() {
+  const now = new Date();
+  const today = now.toLocaleDateString('sv-SE').replace(/-/g, '.') + ' ' +
+    now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  document.querySelectorAll('.js-today').forEach((el) => { el.textContent = today; });
+
   const existingSession = getSession();
   if (existingSession) {
     startApp(existingSession);

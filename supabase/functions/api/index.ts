@@ -158,6 +158,21 @@ async function deleteAS(p: Payload) {
   return { ok: true };
 }
 
+// 버튼을 누른 시점 기준 6개월 전보다 먼저 접수된 건 삭제. dryRun이면 건수만 센다.
+async function deleteOldAS(p: Payload) {
+  await requireAdmin(p);
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 6);
+  const before = cutoff.toISOString();
+  if (p.dryRun) {
+    const { count, error } = await db.from(AS).select('id', { count: 'exact', head: true }).lt('접수일시', before);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: count || 0, cutoff: before };
+  }
+  const rows = must(await db.from(AS).delete().lt('접수일시', before).select('id'));
+  return { ok: true, count: rows.length, cutoff: before };
+}
+
 async function updateStatus(p: Payload) {
   const session = await requireSession(p);
   if (!p.id || !p.status) return { ok: false, error: 'id와 status가 필요합니다.' };
@@ -348,7 +363,7 @@ async function mentionForStaffName(name: string) {
 
 // ---------- 라우팅 (Code.gs doPost) ----------
 const HANDLERS: Record<string, (p: Payload) => Promise<unknown>> = {
-  login, submitAS, checkDuplicateAS, listAS, updateAS, deleteAS, updateStatus, fieldUpdate,
+  login, submitAS, checkDuplicateAS, listAS, updateAS, deleteAS, deleteOldAS, updateStatus, fieldUpdate,
   listStatusHistory, dashboard, listStaff, addStaff, updateStaff, deleteStaff,
   listStatus, addStatus, deleteStatus, updateStatusColor
 };
