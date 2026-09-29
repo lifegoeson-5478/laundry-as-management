@@ -62,9 +62,10 @@ async function renderListTab(container, params) {
   }
   let currentFilter = '전체';
   let searchText = '';
-  let sortField = null;
-  let sortDirection = 'asc';
+  let sortField = '접수일시'; // 기본: 최근 접수가 맨 위
+  let sortDirection = 'desc';
   let selectedIds = new Set();
+  let openMonths = null; // 펼쳐진 달 (처음엔 이번 달만, 없으면 가장 최근 달)
 
   let specialFilter = null;
   let specialLabel = '';
@@ -92,14 +93,25 @@ async function renderListTab(container, params) {
       );
     }
 
-    if (sortField) {
-      items = items.slice().sort((a, b) => {
-        const av = String(a[sortField] || '');
-        const bv = String(b[sortField] || '');
-        const cmp = av.localeCompare(bv, 'ko');
-        return sortDirection === 'asc' ? cmp : -cmp;
-      });
+    // 열 머리를 누르면 그 열 기준으로 정렬 (달 묶음 안에서)
+    items = items.slice().sort((a, b) => {
+      const cmp = String(a[sortField] || '').localeCompare(String(b[sortField] || ''), 'ko');
+      return sortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    // 접수한 달로 묶기 (표에 보이는 접수일과 같은 기준)
+    const groups = {};
+    items.forEach((item) => {
+      const month = String(item.접수일시 || '').slice(0, 7) || '날짜없음';
+      (groups[month] = groups[month] || []).push(item);
+    });
+    const monthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    if (!openMonths && monthKeys.length) {
+      const currentMonth = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+      openMonths = new Set([monthKeys.includes(currentMonth) ? currentMonth : monthKeys[0]]);
     }
+    const isOpen = (month) => searchText || openMonths.has(month); // 검색 중엔 전체 펼침
+    const visibleItems = monthKeys.filter(isOpen).flatMap((month) => groups[month]);
 
     const filterButtons = Object.keys(LIST_FILTERS).map((name) =>
       `<button data-filter="${escapeHtml(name)}" class="list-tab ${name === currentFilter ? 'active' : ''}">${escapeHtml(name)}</button>`
@@ -112,10 +124,21 @@ async function renderListTab(container, params) {
       </div>
     ` : '';
 
-    const rows = items.map((item, index) => `
+    const rowNumber = new Map(items.map((item, i) => [item.id, i + 1]));
+    const rows = monthKeys.map((month) => {
+      const label = month === '날짜없음' ? '날짜 없음' : month.replace('-', '년 ') + '월';
+      const header = `
+        <tr class="month-row" data-month="${escapeHtml(month)}">
+          <td colspan="${LIST_COLUMNS.length + 1}" data-label="">${isOpen(month) ? '▼' : '▶'} ${escapeHtml(label)} <span>(${groups[month].length}건)</span></td>
+        </tr>`;
+      return header + (isOpen(month) ? groups[month].map(renderRow).join('') : '');
+    }).join('');
+
+    function renderRow(item) {
+      return `
       <tr data-id="${escapeHtml(item.id)}">
         <td data-label=""><input type="checkbox" class="row-select-checkbox" data-id="${escapeHtml(item.id)}" ${selectedIds.has(item.id) ? 'checked' : ''}></td>
-        <td data-label="순번">${index + 1}</td>
+        <td data-label="순번">${rowNumber.get(item.id)}</td>
         <td data-label="고객분류">${escapeHtml(item.고객분류)}</td>
         <td data-label="휴대폰번호">${escapeHtml(item.회원연락처)}</td>
         <td data-label="회원카드">${escapeHtml(item.회원카드)}</td>
@@ -128,8 +151,8 @@ async function renderListTab(container, params) {
           <button type="button" class="status-chip-trigger ${statusChipClass(item.상태)}" style="${statusChipStyle(item.상태)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.상태)}</button>
         </td>
         <td data-label=""><button class="delete-as-btn">삭제</button></td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }
 
     const headerCells = LIST_COLUMNS.map((col) => {
       if (!col.sortable) return `<th>${escapeHtml(col.label)}</th>`;
@@ -227,15 +250,26 @@ async function renderListTab(container, params) {
       });
     });
 
-    container.querySelectorAll('.list-table tbody tr').forEach((row) => {
+    container.querySelectorAll('.list-table tbody tr[data-id]').forEach((row) => {
       row.addEventListener('click', () => openListDetailModal(row.dataset.id));
     });
 
+    container.querySelectorAll('.month-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        if (searchText) return; // 검색 중엔 전체 펼침 고정
+        const month = row.dataset.month;
+        if (openMonths.has(month)) openMonths.delete(month);
+        else openMonths.add(month);
+        draw();
+      });
+    });
+
+    // 전체 선택은 펼쳐진(보이는) 건만
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    selectAllCheckbox.checked = items.length > 0 && items.every((item) => selectedIds.has(item.id));
+    selectAllCheckbox.checked = visibleItems.length > 0 && visibleItems.every((item) => selectedIds.has(item.id));
     selectAllCheckbox.addEventListener('click', (e) => e.stopPropagation());
     selectAllCheckbox.addEventListener('change', () => {
-      items.forEach((item) => {
+      visibleItems.forEach((item) => {
         if (selectAllCheckbox.checked) selectedIds.add(item.id);
         else selectedIds.delete(item.id);
       });

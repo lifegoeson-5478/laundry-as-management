@@ -79,20 +79,21 @@ function textColorForBg(hex) {
   return brightness > 150 ? '#1a1d23' : '#ffffff';
 }
 
-function loadingScreen(subtitle) {
+// 로딩 스켈레톤: 'rows'는 표/목록 모양, 'stats'는 대시보드 숫자 칸 모양
+function loadingScreen(label, variant) {
+  const bar = (w, cls) => `<span class="skel ${cls || ''}" style="width:${w}%"></span>`;
+  const body = variant === 'stats'
+    ? [3, 2, 5].map((cells) => `
+        <div class="skel-section">
+          ${bar(14, 'skel-label')}
+          <div class="skel-stats">${Array.from({ length: cells }, () => `<div class="skel-stat">${bar(40)}${bar(28, 'skel-num')}</div>`).join('')}</div>
+        </div>`).join('')
+    : `<div class="skel-rows">${[72, 58, 66, 50, 62, 54].map((w) => `
+        <div class="skel-row">${bar(6)}${bar(w * 0.35)}${bar(w * 0.4)}${bar(12)}</div>`).join('')}</div>`;
   return `
-    <div class="loading-state">
-      <div class="loading-illust">
-        <div class="loading-illust-glow"></div>
-        <div class="loading-illust-card">
-          <div class="loading-illust-bar"></div>
-          <div class="loading-illust-line"></div>
-          <div class="loading-illust-line short"></div>
-        </div>
-        <div class="loading-illust-ring"></div>
-      </div>
-      <h3>잠시만 기다려 주세요</h3>
-      <p>${escapeHtml(subtitle || '데이터를 불러오고 있어요')}</p>
+    <div class="skeleton" role="status" aria-live="polite">
+      <span class="sr-only">${escapeHtml(label || '데이터를 불러오고 있어요')}</span>
+      ${body}
     </div>`;
 }
 

@@ -209,28 +209,21 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .field-row .badge { flex: 0 0 auto; white-space: nowrap; }
 .field-empty { padding: 80px 20px; text-align: center; color: var(--text-faint); font-size: 13px; }
 
-/* Loading state */
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 64px 20px 56px; text-align: center; }
-.loading-state h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 22px 0 0; }
-.loading-state p { font-size: 13px; color: var(--text-faint); margin: 4px 0 0; }
-.loading-illust { position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; }
-.loading-illust-glow { display: none; }
-.loading-illust-ring {
-  position: absolute; width: 72px; height: 72px; border-radius: 50%;
-  border: 2px solid var(--border); border-top-color: var(--text);
-  animation: loadingSpin 1s linear infinite;
-}
-.loading-illust-card {
-  position: relative; width: 40px; height: 50px; background: var(--surface);
-  border-radius: 6px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden;
-  display: flex; flex-direction: column; align-items: center;
-  animation: loadingCardFloat 2.2s ease-in-out infinite;
-}
-.loading-illust-bar { width: 100%; height: 3px; background: var(--brand); flex: 0 0 auto; }
-.loading-illust-line { width: 60%; height: 3px; border-radius: 2px; background: var(--border); margin-top: 10px; }
-.loading-illust-line.short { width: 38%; margin-top: 6px; }
-@keyframes loadingSpin { to { transform: rotate(360deg); } }
-@keyframes loadingCardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+/* 로딩 스켈레톤 (매장 정보 시스템과 같은 반짝임) */
+@keyframes shimmer { to { background-position: -200% 0; } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skeleton { animation: fadeIn .2s ease; }
+.skel { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, #E6E8EC 25%, #EFF1F3 50%, #E6E8EC 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+.skel-rows { border-top: 1px solid var(--text); }
+.admin-panel .skel-rows { border-top: none; }
+.admin-panel .skel-row:last-child { border-bottom: none; }
+.skel-row { display: flex; align-items: center; gap: 24px; padding: 18px 14px; border-bottom: 1px solid var(--line); }
+.skel-section { margin-bottom: 28px; }
+.skel-label { height: 10px; margin-bottom: 12px; }
+.skel-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-top: 1px solid var(--text); }
+.skel-stat { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
+.skel-stat:last-child { border-right: none; }
+.skel-num { height: 26px; border-radius: 8px; }
 
 /* Shared app modal */
 .app-modal-overlay {
@@ -306,6 +299,11 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .list-table thead th.sortable-th.sorted { color: var(--text); font-weight: 700; }
 .list-table tbody tr { cursor: pointer; transition: background .1s; }
 .list-table tbody tr:hover, .list-table tbody tr.clickable-row:hover { background: #ECEEF1; }
+/* 달 묶음 머리 행 (누르면 접기/펼치기) */
+.list-table tbody tr.month-row, .list-table tbody tr.month-row:hover { background: var(--bg); }
+.list-table tr.month-row td { padding: 9px 14px; font-size: 12px; font-weight: 800; color: var(--text-muted); user-select: none; }
+.list-table tr.month-row td span { font-weight: 500; color: var(--text-faint); }
+.list-table tr.month-row:hover td { color: var(--text); }
 .staff-table th:last-child, .staff-table td:last-child { text-align: right; }
 .staff-table td:last-child { font-weight: 800; font-variant-numeric: tabular-nums; }
 .delete-as-btn {
@@ -448,6 +446,9 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
     border-bottom: 1px solid var(--line); text-align: right;
   }
   .list-table tr td:last-child { border-bottom: none; }
+  .list-table tr.month-row { border: none; background: none; margin: 18px 0 8px; }
+  .list-table tr.month-row td { display: block; text-align: left; padding: 4px 2px; background: none; }
+  .list-table tr.month-row td::before { content: none; }
   .list-table td::before {
     content: attr(data-label); font-weight: 500; color: var(--text-faint); font-family: 'Pretendard', sans-serif;
     text-align: left; flex-shrink: 0;

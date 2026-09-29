@@ -29,7 +29,7 @@ function hideStackTooltip_() {
 
 async function renderDashboardTab(container) {
   const cachedHtml = sessionStorage.getItem('tabHtml_dashboard');
-  container.innerHTML = cachedHtml || loadingScreen('대시보드 현황을 불러오고 있어요');
+  container.innerHTML = cachedHtml || loadingScreen('대시보드 현황을 불러오고 있어요', 'stats');
   const [result] = await Promise.all([callApi('dashboard', {}), getStatusOptions()]);
   if (activeTab !== 'dashboard') return;
   if (!result.ok) {
