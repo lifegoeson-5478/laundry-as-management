@@ -1,4 +1,4 @@
-// apps-script/*.gs 를 그대로 옮긴 API. 요청/응답 형식이 같아서 프론트는 API_URL만 바꾸면 된다.
+// AS 관리 백엔드. 프론트(js/api.js)는 { action, payload }를 POST하고 { ok, ... }를 받는다.
 // 배포: supabase functions deploy api --no-verify-jwt
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
