@@ -23,6 +23,12 @@ function showTab(tabName, params) {
   activeTab = tabName;
   document.getElementById('page-kicker').textContent = TAB_HEADS[tabName][0];
   document.getElementById('page-title-text').textContent = TAB_HEADS[tabName][1];
+  // 탭을 바꿀 때마다 제목·내용 등장 모션을 다시 재생
+  document.querySelectorAll('.page-title, .page-title .hero-dot, #tab-content').forEach((el) => {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
   document.getElementById('tab-content').innerHTML = '';
   TAB_RENDERERS[tabName](document.getElementById('tab-content'), params);
 }

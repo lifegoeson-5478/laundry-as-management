@@ -37,8 +37,9 @@ function initGoogleLogin(onSuccess) {
       }
     }
   });
-  google.accounts.id.renderButton(
-    document.getElementById('google-login-button'),
-    { theme: 'outline', size: 'large' }
-  );
+  const buttonEl = document.getElementById('google-login-button');
+  google.accounts.id.renderButton(buttonEl, {
+    theme: 'outline', size: 'large', shape: 'rectangular', text: 'signin_with',
+    width: Math.min(buttonEl.clientWidth, 400) // Google 버튼 최대 폭 400px
+  });
 }

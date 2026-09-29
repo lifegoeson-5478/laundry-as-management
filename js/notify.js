@@ -3,7 +3,7 @@ function ensureAppModal_() {
   const div = document.createElement('div');
   div.id = 'app-modal-overlay';
   div.className = 'app-modal-overlay';
-  div.innerHTML = '<div class="app-modal"></div>';
+  div.innerHTML = '<div class="app-modal-wrap"><div class="app-modal"></div></div>';
   div.addEventListener('click', (e) => {
     if (e.target === div && div.dataset.dismissable === 'true') {
       closeAppModal();

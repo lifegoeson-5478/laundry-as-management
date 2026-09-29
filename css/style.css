@@ -29,6 +29,8 @@
   --shadow-md: 0 12px 32px rgba(16,24,40,.12);
   --ease-out: cubic-bezier(.2,.7,.2,1);
   --mono: 'JetBrains Mono', 'Pretendard', ui-monospace, Consolas, monospace;
+  /* 종이 질감: SVG 노이즈 + 조명 (매장 정보 시스템과 동일) */
+  --paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='p' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.05 .14' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeDiffuseLighting lighting-color='%23fff' surfaceScale='1.6'%3E%3CfeDistantLight azimuth='45' elevation='55'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.1'/%3E%3C/svg%3E");
 }
 
 * { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box; }
@@ -50,6 +52,7 @@ h2 {
 .hero-dot { color: var(--brand); display: inline-block; }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
+@keyframes fadeIn { from { opacity: 0; } }
 @keyframes heroUp { from { opacity: 0; transform: translateY(14px); } }
 @keyframes dotPop { 0% { transform: scale(0); } 70% { transform: scale(1.4); } 100% { transform: scale(1); } }
 @keyframes modalIn { from { transform: scale(.95) translateY(8px); opacity: 0; } }
@@ -59,7 +62,9 @@ h2 {
 #login-card { max-width: 400px; width: 100%; animation: modalIn .2s ease; }
 #login-card .hero-meta { margin-bottom: 26px; }
 .auth-heading { font-size: 34px; font-weight: 800; line-height: 1.1; letter-spacing: -.05em; margin: 0; animation: heroUp .55s var(--ease-out) backwards; }
-#login-sub { font-size: 13px; color: var(--text-muted); margin: 8px 0 26px; line-height: 1.6; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+#login-sub { font-size: 13px; color: var(--text-muted); margin: 10px 0 26px; line-height: 1.6; padding-bottom: 22px; border-bottom: 1px solid var(--border); word-break: keep-all; }
+#google-login-button { width: 100%; min-height: 44px; }
+#google-login-button > div { margin: 0 auto; }
 
 /* Top nav — 반투명 종이, 흑백 */
 #tab-nav {
@@ -95,6 +100,8 @@ h2 {
 
 main { padding: 26px 24px 64px; max-width: 1280px; margin: 0 auto; }
 #tab-content { animation: fadeUp .32s var(--ease-out); }
+/* 하위 탭 전환 시 내용만 살짝 떠오름 (목록 표는 검색할 때마다 다시 그려져서 제외) */
+#settings-panel, .field-row-list { animation: fadeUp .25s var(--ease-out); }
 
 /* 페이지 머리: 모노 날짜줄 + 큰 제목과 초록 마침표 */
 .hero-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-faint); text-transform: uppercase; }
@@ -204,11 +211,25 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
   background: rgba(15, 20, 30, 0.45); align-items: center; justify-content: center; z-index: 1000;
   backdrop-filter: blur(2px);
 }
-.app-modal-overlay.open { display: flex; }
+.app-modal-overlay.open { display: flex; animation: fadeIn .18s ease; }
+/* 그림자는 바깥 래퍼에 drop-shadow로 (상세 모달의 mask가 box-shadow까지 잘라서) */
+.app-modal-wrap { filter: drop-shadow(0 12px 32px rgba(16,24,40,.14)); }
+.app-modal-overlay.open .app-modal-wrap { animation: modalIn .24s var(--ease-out); }
 .app-modal {
   background: #fff; border-radius: 16px; padding: 28px 26px 22px;
-  width: min(90vw, 380px); box-shadow: var(--shadow-md);
-  animation: modalIn .24s var(--ease-out);
+  width: min(90vw, 380px);
+}
+/* 상세 모달: 종이처럼 — 질감 + 오른쪽 아래 모서리가 접힌 채 떴다가 내려앉으며 펴짐 (매장 정보 모달과 동일)
+   --curl = 접힌 모서리 크기. mask로 모서리를 잘라내고, 접힌 조각은 배경 그라데이션으로 그림(스크롤해도 고정) */
+@property --curl { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@keyframes curlSettle { from { --curl: 90px; } to { --curl: 0px; } }
+.app-modal-overlay.open .app-modal-wrap:has(.wide) { animation: modalIn .24s var(--ease-out), curlSettle .9s .12s cubic-bezier(.2,.8,.2,1) both; }
+.app-modal.wide {
+  background:
+    linear-gradient(315deg, transparent 50%, #DCDFE3 50%, #EEF0F2 68%, #FBFBFB 100%) right bottom / var(--curl) var(--curl) no-repeat,
+    #fff var(--paper-texture);
+  -webkit-mask: linear-gradient(315deg, transparent calc(var(--curl) * .7071), #000 calc(var(--curl) * .7071));
+          mask: linear-gradient(315deg, transparent calc(var(--curl) * .7071), #000 calc(var(--curl) * .7071));
 }
 .app-modal .app-modal-message { margin: 0 0 22px; font-size: 14px; line-height: 1.7; color: var(--text); white-space: pre-line; font-weight: 500; }
 .app-modal-actions { display: flex; gap: 8px; }
@@ -335,26 +356,38 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .stat-card .stat-value { font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
 
 /* Intake wizard — 01·02·03 절차, 섹션은 선으로 구분 */
-#intake-form { max-width: 760px; }
-.wizard-step { padding: 22px 0 24px; border-top: 1px solid var(--border); animation: fadeUp .26s var(--ease-out) both; }
+/* 왼쪽 단계 제목 · 오른쪽 입력 (페이지 폭 전체 사용) */
+.wizard-step {
+  display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: 32px;
+  padding: 24px 0 26px; border-top: 1px solid var(--border); animation: fadeUp .26s var(--ease-out) both;
+}
+.wizard-step > * { grid-column: 2; }
 .wizard-step:first-child { border-top-color: var(--text); }
-.step-head { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; margin-bottom: 16px; }
+.step-head { grid-column: 1; grid-row: 1 / span 10; align-self: start; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; margin: 0; }
 .step-num { font-family: var(--mono); color: var(--text-faint); font-size: 12px; font-weight: 500; }
 .step-num::before { content: '0'; }
 .chip-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .chip { padding: 7px 16px; border-radius: 999px; border: 1px solid var(--border2); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); }
 .chip:hover { border-color: var(--text); color: var(--text); }
 .chip.active, .chip.active:hover { background: var(--text); border-color: var(--text); color: #fff; font-weight: 600; }
-.field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 16px; margin-bottom: 16px; }
+.field-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 16px; margin-bottom: 16px; }
 .wizard-step label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
 .wizard-step input, .wizard-step textarea, .wizard-step select { width: 100%; font-weight: 500; border-radius: 10px; padding: 10px 12px; }
 #delivery-done-field { margin-top: 4px; }
 #delivery-done-field label { display: block; margin-bottom: 8px; }
-.wizard-actions { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; border-top: 1px solid var(--border); }
+.wizard-actions { display: flex; gap: 8px; padding: 20px 0 0 272px; border-top: 1px solid var(--border); }
+.wizard-actions button.btn-outline-block { width: auto; flex: 0 0 auto; white-space: nowrap; padding: 11px 28px; }
 button.btn-primary-block { width: 100%; background: var(--text); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; }
 button.btn-primary-block:hover { background: #000; }
 button.btn-outline-block { width: 100%; background: #fff; border: 1.5px solid var(--border2); padding: 11px 20px; border-radius: 10px; font-weight: 600; color: var(--text-muted); }
 button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--text); }
+
+@media (max-width: 900px) {
+  .wizard-step { display: block; }
+  .step-head { margin-bottom: 16px; }
+  .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wizard-actions { padding-left: 0; }
+}
 
 @media (max-width: 480px) {
   #tab-nav { height: auto; padding: 10px 16px 0; flex-wrap: wrap; row-gap: 4px; gap: 8px; }
@@ -395,5 +428,5 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
