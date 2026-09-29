@@ -35,7 +35,11 @@ function showTab(tabName, params) {
 
 function startApp(session) {
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('brand-mark').addEventListener('click', (e) => {
+    e.preventDefault();
+    showTab('dashboard');
+  });
   if (session.role === '관리자') {
     document.getElementById('settings-tab-button').style.display = 'inline-block';
   }
@@ -54,6 +58,7 @@ function init() {
   const today = now.toLocaleDateString('sv-SE').replace(/-/g, '.') + ' ' +
     now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   document.querySelectorAll('.js-today').forEach((el) => { el.textContent = today; });
+  document.getElementById('app-version').textContent = 'v' + APP_VERSION;
 
   const existingSession = getSession();
   if (existingSession) {
