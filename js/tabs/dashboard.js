@@ -31,18 +31,19 @@ async function renderDashboardTab(container) {
   const statuses = [...new Set(customerTypes.flatMap((type) => Object.keys(byType[type] || {})))]
     .filter((status) => customerTypes.some((type) => countOf(type, status) > 0))
     .sort((a, b) => orderOf(a) - orderOf(b));
-  const countCell = (count, total) => `
-    <td class="num-cell"><b>${count}</b><span class="ratio-line"><i style="width:${total ? (count / total) * 100 : 0}%"></i></span></td>`;
-  const statusRows = statuses.map((status) => {
-    const counts = customerTypes.map((type) => countOf(type, status));
-    const sum = counts.reduce((a, b) => a + b, 0);
-    return `
+  // 막대 길이 = 건수에 비례. 고객분류 칸은 같은 기준(표에서 가장 큰 수 = 꽉 참), 합계 칸은 합계 중 가장 큰 수 기준
+  const rowCounts = statuses.map((status) => customerTypes.map((type) => countOf(type, status)));
+  const rowSums = rowCounts.map((counts) => counts.reduce((a, b) => a + b, 0));
+  const maxCell = Math.max(1, ...rowCounts.flat());
+  const maxSum = Math.max(1, ...rowSums);
+  const countCell = (count, max) => `
+    <td class="num-cell"><b>${count}</b><span class="ratio-line"><i style="width:${(count / max) * 100}%"></i></span></td>`;
+  const statusRows = statuses.map((status, r) => `
       <tr>
         <td><span class="status-dot" style="background:${statusColorFor(status) || '#9aa0ad'}"></span>${escapeHtml(status)}</td>
-        ${counts.map((count, i) => countCell(count, typeTotals[i])).join('')}
-        ${countCell(sum, typeTotals[0] + typeTotals[1])}
-      </tr>`;
-  }).join('') || `<tr><td colspan="${customerTypes.length + 2}">진행중인 건이 없습니다.</td></tr>`;
+        ${rowCounts[r].map((count) => countCell(count, maxCell)).join('')}
+        ${countCell(rowSums[r], maxSum)}
+      </tr>`).join('') || `<tr><td colspan="${customerTypes.length + 2}">진행중인 건이 없습니다.</td></tr>`;
 
   container.innerHTML = `
     <h2>전체 현황</h2>
