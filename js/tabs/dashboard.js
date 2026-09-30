@@ -1,32 +1,3 @@
-function ensureStackTooltip_() {
-  let el = document.getElementById('stack-tooltip-portal');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'stack-tooltip-portal';
-    el.className = 'stack-tooltip';
-    el.hidden = true;
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function showStackTooltip_(segment) {
-  const tooltip = ensureStackTooltip_();
-  tooltip.innerHTML = `
-    <div class="stack-tooltip-title">${escapeHtml(segment.dataset.name)}</div>
-    <div class="stack-tooltip-value">진행중 ${escapeHtml(segment.dataset.count)}건</div>
-  `;
-  const rect = segment.getBoundingClientRect();
-  tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2}px`;
-  tooltip.style.top = `${rect.top + window.scrollY - 10}px`;
-  tooltip.hidden = false;
-}
-
-function hideStackTooltip_() {
-  const tooltip = document.getElementById('stack-tooltip-portal');
-  if (tooltip) tooltip.hidden = true;
-}
-
 async function renderDashboardTab(container) {
   const cachedHtml = sessionStorage.getItem('tabHtml_dashboard');
   container.innerHTML = cachedHtml || loadingScreen('대시보드 현황을 불러오고 있어요', 'stats');
@@ -48,27 +19,30 @@ async function renderDashboardTab(container) {
     <tr class="clickable-row" data-staff="${escapeHtml(name)}"><td data-label="담당자">${escapeHtml(name)}</td><td data-label="진행중 건수">${count}</td></tr>
   `).join('') || '<tr><td colspan="2">진행중인 건이 없습니다.</td></tr>';
 
-  function buildStackedBar(statusCounts) {
-    const entries = Object.entries(statusCounts || {}).filter(([, count]) => count > 0);
-    const total = entries.reduce((sum, [, count]) => sum + count, 0);
-    const segments = entries.map(([name, count]) => {
-      const color = statusColorFor(name) || '#9aa0ad';
-      const pct = total ? (count / total) * 100 : 0;
-      return `<div class="stacked-bar-segment" style="width:${pct}%;background:${color}" data-name="${escapeHtml(name)}" data-count="${count}"></div>`;
-    }).join('');
-    return { total, html: segments || '<div class="stacked-bar-segment empty" style="width:100%"></div>' };
-  }
+  // 어드민 상태값 순서대로 (목록에 없는 상태는 뒤로)
+  const statusOrder = (statusOptionsCache || []).map((s) => s.name);
+  const orderOf = (name) => { const i = statusOrder.indexOf(name); return i === -1 ? statusOrder.length : i; };
 
+  // 고객분류별 상태 현황: 행 = 상태(색은 점에만), 칸 = 고객분류 + 합계, 숫자 아래 얇은 비율선
   const customerTypes = ['런드리고', '런드리24'];
-  const customerBars = customerTypes.map((type) => {
-    const { total, html } = buildStackedBar(result.statusByCustomerType && result.statusByCustomerType[type]);
+  const byType = result.statusByCustomerType || {};
+  const countOf = (type, status) => (byType[type] && byType[type][status]) || 0;
+  const typeTotals = customerTypes.map((type) => Object.values(byType[type] || {}).reduce((a, b) => a + b, 0));
+  const statuses = [...new Set(customerTypes.flatMap((type) => Object.keys(byType[type] || {})))]
+    .filter((status) => customerTypes.some((type) => countOf(type, status) > 0))
+    .sort((a, b) => orderOf(a) - orderOf(b));
+  const countCell = (count, total) => `
+    <td class="num-cell"><b>${count}</b><span class="ratio-line"><i style="width:${total ? (count / total) * 100 : 0}%"></i></span></td>`;
+  const statusRows = statuses.map((status) => {
+    const counts = customerTypes.map((type) => countOf(type, status));
+    const sum = counts.reduce((a, b) => a + b, 0);
     return `
-      <div class="stacked-bar-group">
-        <div class="stacked-bar-group-label">${escapeHtml(type)} <span>진행중 ${total}건</span></div>
-        <div class="stacked-bar">${html}</div>
-      </div>
-    `;
-  }).join('');
+      <tr>
+        <td><span class="status-dot" style="background:${statusColorFor(status) || '#9aa0ad'}"></span>${escapeHtml(status)}</td>
+        ${counts.map((count, i) => countCell(count, typeTotals[i])).join('')}
+        ${countCell(sum, typeTotals[0] + typeTotals[1])}
+      </tr>`;
+  }).join('') || `<tr><td colspan="${customerTypes.length + 2}">진행중인 건이 없습니다.</td></tr>`;
 
   container.innerHTML = `
     <h2>전체 현황</h2>
@@ -98,7 +72,16 @@ async function renderDashboardTab(container) {
     <div class="stat-grid">${agingCards}</div>
 
     <h2>고객분류별 상태 현황</h2>
-    ${customerBars}
+    <div class="matrix-scroll">
+      <table class="list-table status-matrix">
+        <thead><tr>
+          <th>상태</th>
+          ${customerTypes.map((type, i) => `<th>${escapeHtml(type)} <span>${typeTotals[i]}</span></th>`).join('')}
+          <th>합계 <span>${typeTotals[0] + typeTotals[1]}</span></th>
+        </tr></thead>
+        <tbody>${statusRows}</tbody>
+      </table>
+    </div>
 
     <h2>담당자별 진행 현황</h2>
     <table class="list-table staff-table">
@@ -127,11 +110,6 @@ async function renderDashboardTab(container) {
     row.addEventListener('click', () => {
       showTab('list', { staff: row.dataset.staff });
     });
-  });
-
-  container.querySelectorAll('.stacked-bar-segment:not(.empty)').forEach((segment) => {
-    segment.addEventListener('mouseenter', () => showStackTooltip_(segment));
-    segment.addEventListener('mouseleave', hideStackTooltip_);
   });
 
   sessionStorage.setItem('tabHtml_dashboard', container.innerHTML);
