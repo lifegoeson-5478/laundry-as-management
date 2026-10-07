@@ -346,12 +346,14 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
   padding: 4px; max-height: 240px; overflow-y: auto; animation: fadeUp .2s var(--ease-out);
 }
 .status-option {
-  padding: 9px 11px; border-radius: 7px; font-size: 13px; cursor: pointer; font-weight: 500;
+  position: relative; padding: 9px 32px 9px 11px; border-radius: 7px; font-size: 13px; cursor: pointer; font-weight: 500;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70vw;
 }
 .status-option:hover { background: var(--bg); }
-.status-option.current { font-weight: 700; color: var(--text); box-shadow: inset 2px 0 0 var(--text); }
-.status-option-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+/* 현재 상태: 오른쪽 끝 체크 표시 (둥근 모서리에 왼쪽 선을 그으면 선이 휘어 보여서) */
+.status-option.current { font-weight: 700; color: var(--text); }
+.status-option.current::after { content: '✓'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--brand-dark); }
+.status-option-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; box-shadow: 0 0 0 1px rgba(16,24,40,.12); }
 
 /* 검색: 흰 입력칸 + 아이콘 */
 #list-search {
