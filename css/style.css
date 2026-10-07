@@ -177,6 +177,16 @@ button[type="submit"]:hover, .field-save-btn:hover { background: #000; }
 .swatch::-moz-color-swatch { border: none; border-radius: 50%; }
 .swatch:hover { border-color: var(--text-faint); }
 .status-preview { font-size: 12px; padding: 4px 11px; }
+/* 상태값 순서 변경 손잡이 (점 6개) */
+.drag-handle {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 30px;
+  border-radius: 6px; color: var(--text-faint); font-size: 16px; line-height: 1; cursor: grab; touch-action: none; user-select: none;
+}
+.drag-handle::before { content: '⠿'; }
+.drag-handle:hover { background: var(--bg); color: var(--text); }
+.admin-row.dragging { background: #fff; box-shadow: var(--shadow-md); border-radius: 10px; position: relative; z-index: 1; }
+.admin-row.dragging .drag-handle { cursor: grabbing; }
+#status-list .admin-row { padding-left: 4px; padding-right: 4px; }
 
 /* 데이터 정리 */
 .cleanup-panel { padding-top: 4px; max-width: 560px; }
@@ -452,6 +462,7 @@ button.btn-outline-block:hover { border-color: var(--text-faint); color: var(--t
   .admin-form input[type="text"], .admin-form input[type="email"] { flex: 1 1 100%; }
   .admin-row { flex-wrap: wrap; gap: 8px 10px; }
   .admin-row-main { flex: 1 1 100%; }
+  #status-list .admin-row-main { flex-basis: calc(100% - 40px); }   /* 손잡이와 같은 줄에 */
   .site-footer { padding: 0 16px; }
   .site-footer-inner { gap: 10px 14px; }
   .site-footer-slack { margin-left: 0; }

@@ -322,6 +322,17 @@ async function deleteStatus(p: Payload) {
   return { ok: true };
 }
 
+// 드래그로 바꾼 순서대로 정렬순서를 1부터 다시 매긴다. names = 새 순서의 상태명 배열
+async function reorderStatus(p: Payload) {
+  await requireAdmin(p);
+  const names: string[] = Array.isArray(p.names) ? p.names : [];
+  if (!names.length) return { ok: false, error: 'names가 필요합니다.' };
+  const results = await Promise.all(names.map((name, i) =>
+    db.from(STATUS).update({ 정렬순서: i + 1 }).eq('상태명', name)));
+  results.forEach(must);
+  return { ok: true };
+}
+
 async function updateStatusColor(p: Payload) {
   await requireAdmin(p);
   if (!p.name) return { ok: false, error: 'name이 필요합니다.' };
@@ -365,7 +376,7 @@ async function mentionForStaffName(name: string) {
 const HANDLERS: Record<string, (p: Payload) => Promise<unknown>> = {
   login, submitAS, checkDuplicateAS, listAS, updateAS, deleteAS, deleteOldAS, updateStatus, fieldUpdate,
   listStatusHistory, dashboard, listStaff, addStaff, updateStaff, deleteStaff,
-  listStatus, addStatus, deleteStatus, updateStatusColor
+  listStatus, addStatus, deleteStatus, updateStatusColor, reorderStatus
 };
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type' };

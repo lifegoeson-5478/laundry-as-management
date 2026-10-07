@@ -193,6 +193,7 @@ async function renderSettingsTab(container) {
         const textColor = item.textColor || textColorForBg(color);
         return `
           <div class="admin-row" data-name="${escapeHtml(item.name)}">
+            <span class="drag-handle" title="끌어서 순서 변경" aria-label="끌어서 순서 변경"></span>
             <span class="admin-row-main"><span class="badge status-preview" style="background:${color};color:${textColor}">${escapeHtml(item.name)}</span></span>
             <span class="admin-row-meta mono status-hex">${color.toUpperCase()} · ${textColor.toUpperCase()}</span>
             <label class="swatch-label">배경<input type="color" class="swatch" data-kind="color" value="${color}"></label>
@@ -226,6 +227,41 @@ async function renderSettingsTab(container) {
       if (result.ok) invalidateStatusCache();
       else await showAlert('색상 변경 실패: ' + result.error);
     });
+    // 손잡이를 잡고 끌어서 순서 변경 (pointer 이벤트라 마우스·터치 모두 동작), 놓으면 저장
+    let dragRow = null;
+    let orderBefore = '';
+    const currentOrder = () => [...list.querySelectorAll('.admin-row')].map((r) => r.dataset.name);
+    list.addEventListener('pointerdown', (e) => {
+      const handle = e.target.closest('.drag-handle');
+      if (!handle) return;
+      e.preventDefault();
+      dragRow = handle.closest('.admin-row');
+      orderBefore = currentOrder().join('\n');
+      dragRow.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+    });
+    list.addEventListener('pointermove', (e) => {
+      if (!dragRow) return;
+      const over = [...list.querySelectorAll('.admin-row:not(.dragging)')].find((row) => {
+        const rect = row.getBoundingClientRect();
+        return e.clientY < rect.top + rect.height / 2;
+      });
+      if (over) list.insertBefore(dragRow, over);
+      else list.appendChild(dragRow);
+    });
+    const endDrag = async () => {
+      if (!dragRow) return;
+      dragRow.classList.remove('dragging');
+      dragRow = null;
+      const names = currentOrder();
+      if (names.join('\n') === orderBefore) return;
+      const result = await callApi('reorderStatus', { names: names });
+      if (result.ok) invalidateStatusCache();
+      else { await showAlert('순서 변경 실패: ' + result.error); loadStatus(); }
+    };
+    list.addEventListener('pointerup', endDrag);
+    list.addEventListener('pointercancel', endDrag);
+
     list.addEventListener('click', async (e) => {
       if (!e.target.closest('button[data-act="delete"]')) return;
       const name = e.target.closest('.admin-row').dataset.name;
