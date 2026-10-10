@@ -66,6 +66,7 @@ async function renderListTab(container, params) {
   let sortDirection = 'desc';
   let selectedIds = new Set();
   let openMonths = null; // 펼쳐진 달 (처음엔 이번 달만, 없으면 가장 최근 달)
+  let shellReady = false; // 검색창을 포함한 뼈대를 만들었는지
 
   let specialFilter = null;
   let specialLabel = '';
@@ -196,10 +197,25 @@ async function renderListTab(container, params) {
       </div>
     ` : '';
 
-    container.innerHTML = `
+    // 검색창은 처음 한 번만 만들고 그 위·아래만 다시 그림.
+    // 매번 검색창까지 새로 만들면 한글 조합이 끊겨 'ㄷㅣㅅ'처럼 자모가 분리됨.
+    if (!shellReady) {
+      container.innerHTML = `
+        <div id="list-top"></div>
+        <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색">
+        <div id="list-body"></div>
+      `;
+      container.querySelector('#list-search').addEventListener('input', (e) => {
+        searchText = e.target.value;
+        draw();
+      });
+      shellReady = true;
+    }
+    container.querySelector('#list-top').innerHTML = `
       <div id="list-tab-bar">${filterButtons}</div>
       ${specialBanner}
-      <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색" value="${escapeHtml(searchText)}">
+    `;
+    container.querySelector('#list-body').innerHTML = `
       ${bulkBar}
       <div class="table-scroll">
         <table class="list-table">
@@ -225,14 +241,6 @@ async function renderListTab(container, params) {
         }
         draw();
       });
-    });
-
-    const searchInput = document.getElementById('list-search');
-    searchInput.focus();
-    searchInput.setSelectionRange(searchText.length, searchText.length);
-    searchInput.addEventListener('input', (e) => {
-      searchText = e.target.value;
-      draw();
     });
 
     const clearBtn = document.getElementById('clear-special-filter');
