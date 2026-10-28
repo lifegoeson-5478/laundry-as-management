@@ -104,8 +104,12 @@ function openFieldModal(id) {
       </div>
       <div class="field-action-section">
         <div class="detail-row">
-          <div class="detail-label">진행 상태 선택</div>
+          <div class="detail-label">진행 상태 선택 <span class="detail-hint">(바꿀 때만 선택)</span></div>
           <div class="field-buttons chip-group">${buttons}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">수선비</div>
+          <div class="won-input"><input type="text" class="field-cost" inputmode="numeric" autocomplete="off" placeholder="0" value="${item.수선비 == null ? '' : Number(item.수선비).toLocaleString('ko-KR')}"><span>원</span></div>
         </div>
         <div class="detail-row">
           <div class="detail-label">메모</div>
@@ -119,26 +123,38 @@ function openFieldModal(id) {
   const modal = openDetailModal('진행 상태 업데이트', bodyHtml);
   const detail = modal.querySelector('#field-detail');
 
+  // 상태 버튼: 한 번 더 누르면 선택 해제 (수선비·메모만 저장할 때)
   detail.querySelectorAll('.field-status-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      detail.dataset.selectedStatus = btn.dataset.label;
+      const next = detail.dataset.selectedStatus === btn.dataset.label ? '' : btn.dataset.label;
+      detail.dataset.selectedStatus = next;
       detail.querySelectorAll('.field-status-btn').forEach((b) => {
-        b.classList.toggle('selected', b === btn);
+        b.classList.toggle('selected', b.dataset.label === next);
       });
     });
   });
 
+  // 수선비: 숫자만 남기고 세 자리마다 쉼표
+  const costInput = detail.querySelector('.field-cost');
+  costInput.addEventListener('input', () => {
+    const digits = costInput.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+    costInput.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+  });
+
   detail.querySelector('.field-save-btn').addEventListener('click', async () => {
     const fieldStatus = detail.dataset.selectedStatus;
-    if (!fieldStatus) {
-      await showAlert('저장할 상태를 먼저 선택해주세요.');
+    const memo = detail.querySelector('.field-memo').value;
+    const repairCost = costInput.value.replace(/\D/g, '');
+    const costChanged = repairCost !== (item.수선비 == null ? '' : String(item.수선비));
+    if (!fieldStatus && !costChanged && memo === (item.현장메모 || '')) {
+      await showAlert('바뀐 내용이 없어요.');
       return;
     }
-    const memo = detail.querySelector('.field-memo').value;
     const result = await callApi('fieldUpdate', {
       id: detail.dataset.id,
       fieldStatus: fieldStatus,
-      memo: memo
+      memo: memo,
+      repairCost: repairCost
     });
     if (result.ok) {
       await showAlert('저장되었습니다.');

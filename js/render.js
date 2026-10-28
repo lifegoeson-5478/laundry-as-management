@@ -35,6 +35,12 @@ function statusChipStyle(status) {
   return color ? `background:${color};color:${statusTextColorFor(status)};` : '';
 }
 
+// 수선비 표시: 35000 → '35,000원', 비어 있으면 ''
+function formatWon(value) {
+  if (value === null || value === undefined || value === '') return '';
+  return Number(value).toLocaleString('ko-KR') + '원';
+}
+
 function formatDateOnly(str) {
   if (!str) return '';
   const s = String(str);
@@ -83,7 +89,7 @@ function textColorForBg(hex) {
 function loadingScreen(label, variant) {
   const bar = (w, cls) => `<span class="skel ${cls || ''}" style="width:${w}%"></span>`;
   const body = variant === 'stats'
-    ? [3, 3, 5].map((cells) => `
+    ? [3, 2, 3, 5].map((cells) => `
         <div class="skel-section">
           ${bar(14, 'skel-label')}
           <div class="skel-stats">${Array.from({ length: cells }, () => `<div class="skel-stat">${bar(40)}${bar(28, 'skel-num')}</div>`).join('')}</div>

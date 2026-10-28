@@ -1,6 +1,7 @@
 // AS 관리 백엔드. 프론트(js/api.js)는 { action, payload }를 POST하고 { ok, ... }를 받는다.
 // 배포: supabase functions deploy api --no-verify-jwt
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+// jsr.io는 배포 번들링 중 파일별 다운로드가 10초를 넘겨 실패한 적이 있어 npm 패키지로 가져온다
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 const SESSION_SECRET = Deno.env.get('SESSION_SECRET')!;
@@ -139,12 +140,34 @@ async function listAS(p: Payload) {
   return { ok: true, items: await listAllAS() };
 }
 
+// 수선비: 빈 값이면 null(지움), 아니면 0 이상 정수(원). 형식이 틀리면 error.
+function parseRepairCost(value: unknown): { value: number | null } | { error: string } {
+  const raw = String(value ?? '').replace(/[,\s원]/g, '');
+  if (raw === '') return { value: null };
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 0 || n > 100000000) return { error: '수선비는 0 이상 1억 이하의 숫자(원)로 입력해주세요.' };
+  return { value: n };
+}
+
+// 수선비가 바뀌면 입력일도 같이 기록 (대시보드 '이번 달 수선비'는 입력일 기준)
+function repairCostUpdates(current: any, value: number | null) {
+  if (current.수선비 === value) return {};
+  return { 수선비: value, 수선비입력일시: value === null ? null : new Date().toISOString() };
+}
+
 async function updateAS(p: Payload) {
   await requireSession(p);
   if (!p.id) return { ok: false, error: 'id가 필요합니다.' };
   const form = p.form || {};
   const updates: Record<string, any> = {};
   AS_EDITABLE_FIELDS.forEach((f) => { if (form[f] !== undefined) updates[f] = form[f]; });
+  if (form.수선비 !== undefined) {
+    const cost = parseRepairCost(form.수선비);
+    if ('error' in cost) return { ok: false, error: cost.error };
+    const current = await getAS(p.id);
+    if (!current) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
+    Object.assign(updates, repairCostUpdates(current, cost.value));
+  }
   const rows = must(await db.from(AS).update(updates).eq('id', p.id).select('id'));
   if (!rows.length) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
   return { ok: true };
@@ -190,15 +213,26 @@ async function listStatusHistory(p: Payload) {
   return { ok: true, items };
 }
 
+// 현장 저장. fieldStatus가 없으면 상태는 그대로 두고 메모·수선비만 저장 (이력·Slack 없음)
 async function fieldUpdate(p: Payload) {
   const session = await requireSession(p);
-  if (!p.id || !p.fieldStatus) return { ok: false, error: 'id와 fieldStatus가 필요합니다.' };
-  const mapped = FIELD_STATUS_MAP[p.fieldStatus];
-  if (!mapped) return { ok: false, error: '알 수 없는 현장 상태입니다: ' + p.fieldStatus };
+  if (!p.id) return { ok: false, error: 'id가 필요합니다.' };
+  const mapped = p.fieldStatus ? FIELD_STATUS_MAP[p.fieldStatus] : null;
+  if (p.fieldStatus && !mapped) return { ok: false, error: '알 수 없는 현장 상태입니다: ' + p.fieldStatus };
 
   const item = await getAS(p.id);
   if (!item) return { ok: false, error: '해당 건을 찾을 수 없습니다.' };
-  must(await db.from(AS).update({ 상태: mapped, 현장메모: p.memo || '' }).eq('id', p.id));
+  const updates: Record<string, any> = { 현장메모: p.memo || '' };
+  if (p.repairCost !== undefined) {
+    const cost = parseRepairCost(p.repairCost);
+    if ('error' in cost) return { ok: false, error: cost.error };
+    Object.assign(updates, repairCostUpdates(item, cost.value));
+  }
+  if (!mapped) {
+    must(await db.from(AS).update(updates).eq('id', p.id));
+    return { ok: true };
+  }
+  must(await db.from(AS).update({ ...updates, 상태: mapped }).eq('id', p.id));
   await logStatusChange(p.id, session.name, item.상태, mapped);
 
   const laundry = [item.브랜드, item.품목, item.색상, item.손상부위].filter((v) => v).join(' / ');
@@ -247,8 +281,15 @@ async function dashboard(p: Payload) {
     if (statusByCustomerType[r.고객분류]) count(statusByCustomerType[r.고객분류], r.상태 || '(미상)');
   });
 
+  // 이번 달(한국 시간) 1일 0시 이후에 입력된 수선비 합계
+  const kstNow = new Date(today.getTime() + 9 * 60 * 60 * 1000);
+  const monthStart = new Date(Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), 1) - 9 * 60 * 60 * 1000);
+  const costRows = rows.filter((r) => r.수선비 != null && r.수선비입력일시 && new Date(r.수선비입력일시) >= monthStart);
+
   return {
     ok: true,
+    repairCostMonth: costRows.reduce((sum, r) => sum + Number(r.수선비), 0),
+    repairCostMonthCount: costRows.length,
     needIntake: rows.filter((r) => r.상태 === '접수 필요').length,
     needPickup: rows.filter((r) => r.상태 === '회수 필요').length,
     agingBuckets, byStaff, byCustomerType, byStatus, statusByCustomerType,

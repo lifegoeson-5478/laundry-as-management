@@ -26,7 +26,8 @@ const LIST_EDIT_FIELDS = [
   ['수거요청일자', 'date'], ['바코드번호', 'text'],
   ['브랜드', 'text'], ['품목', 'text'], ['품번', 'text'], ['생산연도', 'text'],
   ['사이즈', 'text'], ['색상', 'text'], ['매장위치', 'text'],
-  ['브랜드AS동의일', 'date'], ['손상부위', 'text'], ['요청건관련메모', 'text']
+  ['브랜드AS동의일', 'date'], ['손상부위', 'text'], ['요청건관련메모', 'text'],
+  ['수선비', 'number']
 ];
 
 function ensureStatusPortal_() {
@@ -444,6 +445,7 @@ async function renderListTab(container, params) {
         ${detailRow('접수자', escapeHtml(item.접수자))}
         ${detailRow('접수일시', escapeHtml(formatDateOnly(item.접수일시)))}
         ${detailRow('현재상태', statusBadge(item.상태))}
+        ${detailRow('수선비', escapeHtml(formatWon(item.수선비) || '(미입력)'))}
       </div>
       ${detailRow('손상부위', escapeHtml(item.손상부위))}
       ${detailRow('요청건관련메모', escapeHtml(item.요청건관련메모))}
@@ -468,7 +470,7 @@ async function renderListTab(container, params) {
 
   function renderEditBody(item) {
     const fieldsHtml = LIST_EDIT_FIELDS.map(([name, type]) => `
-      <label>${name}<input type="${type}" name="${name}" value="${escapeHtml(item[name] || '')}"></label>
+      <label>${name}<input type="${type}" name="${name}" value="${escapeHtml(item[name] ?? '')}" ${type === 'number' ? 'min="0" step="1" inputmode="numeric"' : ''}></label>
     `).join('');
     return `
       <form id="list-edit-form">

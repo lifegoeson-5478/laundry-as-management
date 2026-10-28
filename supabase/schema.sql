@@ -22,7 +22,9 @@ create table "AS접수" (
   "요청건관련메모" text default '',
   "런드리고배송완료처리" text default '',
   "상태" text default '',
-  "현장메모" text default ''
+  "현장메모" text default '',
+  "수선비" integer,                -- 원 단위, 비어 있으면 아직 모름
+  "수선비입력일시" timestamptz     -- 대시보드 '이번 달 수선비' 기준
 );
 create index on "AS접수" ("접수일시");
 create index on "AS접수" ("회원카드", "바코드번호");

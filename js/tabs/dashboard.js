@@ -53,6 +53,12 @@ async function renderDashboardTab(container) {
       <div class="stat-card"><div class="stat-label">완료</div><div class="stat-value">${result.totalClosed}</div></div>
     </div>
 
+    <h2>이번 달 수선비 (${new Date().getMonth() + 1}월 입력분)</h2>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">합계</div><div class="stat-value">${(result.repairCostMonth || 0).toLocaleString('ko-KR')}<span class="stat-unit">원</span></div></div>
+      <div class="stat-card"><div class="stat-label">입력 건수</div><div class="stat-value">${result.repairCostMonthCount || 0}<span class="stat-unit">건</span></div></div>
+    </div>
+
     <h2>AS 접수 · 진행 · 회수 현황</h2>
     <div class="stat-grid">
       <div class="stat-card clickable" id="need-intake-card">
