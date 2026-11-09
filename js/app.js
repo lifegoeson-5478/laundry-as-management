@@ -85,7 +85,12 @@ async function checkForNewVersion_() {
     // cache: 'reload' → 네트워크에서 새로 받고 브라우저 캐시도 갱신
     const text = await (await fetch('js/config.js', { cache: 'reload' })).text();
     const match = text.match(/APP_VERSION = '([^']+)'/);
-    if (!match || match[1] === APP_VERSION || isUserEditing_()) return;
+    // 더 높은 버전일 때만 (CDN 서버마다 캐시가 달라 옛 버전이 오면 무시)
+    if (!match || match[1].localeCompare(APP_VERSION, undefined, { numeric: true }) <= 0 || isUserEditing_()) return;
+    // 같은 버전으로 이미 한 번 새로고침했는데도 옛 파일이 떴다면 반복하지 않는다
+    let tried = null;
+    try { tried = sessionStorage.getItem('reloadedFor'); sessionStorage.setItem('reloadedFor', match[1]); } catch (e) { /* 저장소 막힘 */ }
+    if (tried === match[1]) return;
     // GitHub Pages가 파일을 10분간 캐시하므로, 새로고침 전에 JS·CSS를 새로 받아 둔다
     const assets = [...document.querySelectorAll('script[src^="js/"], link[href^="css/"]')].map((el) => el.src || el.href);
     await Promise.all(assets.map((url) => fetch(url, { cache: 'reload' })));
