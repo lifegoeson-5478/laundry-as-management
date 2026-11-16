@@ -88,11 +88,8 @@ async function renderListTab(container, params) {
     if (specialFilter) items = items.filter(specialFilter);
     if (searchText) {
       const q = searchText.toLowerCase();
-      items = items.filter((r) =>
-        String(r.회원카드 || '').toLowerCase().includes(q) ||
-        String(r.회원연락처 || '').toLowerCase().includes(q) ||
-        String(r.바코드번호 || '').toLowerCase().includes(q)
-      );
+      const fields = ['회원카드', '회원연락처', '바코드번호', '품번', '브랜드'];
+      items = items.filter((r) => fields.some((f) => String(r[f] || '').toLowerCase().includes(q)));
     }
 
     // 열 머리를 누르면 그 열 기준으로 정렬 (달 묶음 안에서)
@@ -203,7 +200,7 @@ async function renderListTab(container, params) {
     if (!shellReady) {
       container.innerHTML = `
         <div id="list-top"></div>
-        <input type="search" id="list-search" placeholder="회원카드, 회원연락처, 바코드로 검색">
+        <input type="search" id="list-search" placeholder="회원카드, 연락처, 바코드, 품번, 브랜드로 검색">
         <div id="list-body"></div>
       `;
       container.querySelector('#list-search').addEventListener('input', (e) => {
